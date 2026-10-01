@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MineX SMP — ad</title>
+<link href="fonts.css" rel="stylesheet">
+<style>
+  /* ---- edit here ------------------------------------------------ */
+  :root {
+    --ink:        #FFFFFF;
+    --ink-dim:    rgba(255,255,255,.60);
+    --accent:     #FFA32E;   /* the single warm accent */
+    --shadow:     #0A0612;   /* scrim base, purple-black */
+    --bg:         url('backdrop-placeholder.jpg');
+    --bg-pos:     center 34%;
+  }
+  /* --------------------------------------------------------------- */
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; }
+
+  .frame {
+    position:relative; overflow:hidden;
+    width:var(--w); height:var(--h);
+    font-family:'Archivo',system-ui,sans-serif;
+    color:var(--ink);
+    isolation:isolate;
+  }
+
+  /* Full-bleed photography. Swap --bg for a real screenshot. */
+  .frame::before {
+    content:''; position:absolute; inset:0; z-index:0;
+    background-image:var(--bg);
+    background-size:cover;
+    background-position:var(--bg-pos);
+  }
+
+  /* Scrim. Minecraft skies are bright; white type needs this to survive. */
+  .frame::after {
+    content:''; position:absolute; inset:0; z-index:1;
+    background:
+      linear-gradient(to bottom,
+        rgba(10,6,18,.30) 0%,
+        rgba(10,6,18,.00) 22%,
+        rgba(10,6,18,.00) 42%,
+        rgba(10,6,18,.58) 64%,
+        rgba(10,6,18,.88) 84%,
+        rgba(10,6,18,.95) 100%),
+      radial-gradient(130% 90% at 50% 30%,
+        rgba(10,6,18,0) 40%, rgba(10,6,18,.45) 100%);
+  }
+
+  .frame > * { position:relative; z-index:2; }
+
+  /* Quiet wordmark. Not a logo lockup — it should not be the first read. */
+  .mark {
+    position:absolute; top:var(--pad); left:var(--pad);
+    display:flex; align-items:center; gap:calc(var(--pad)*.28);
+    font-weight:600; font-size:var(--mark);
+    letter-spacing:.22em; text-transform:uppercase;
+    color:rgba(255,255,255,.90);
+    text-shadow:0 2px 14px rgba(0,0,0,.55);
+  }
+  .mark i {
+    width:calc(var(--mark)*.62); height:calc(var(--mark)*.62);
+    background:var(--accent); display:block;
+    box-shadow:0 0 0 calc(var(--mark)*.16) rgba(255,163,46,.22);
+  }
+
+  .content {
+    position:absolute; left:var(--pad); right:var(--pad); bottom:var(--pad);
+  }
+
+  .eyebrow {
+    color:var(--accent);
+    font-weight:700; font-size:var(--eyebrow);
+    letter-spacing:.17em; text-transform:uppercase;
+    margin-bottom:calc(var(--eyebrow)*.85);
+  }
+
+  h1 {
+    font-weight:800; font-size:var(--head);
+    line-height:.97; letter-spacing:-.028em;
+    text-wrap:balance;
+    text-shadow:0 4px 30px rgba(0,0,0,.45);
+  }
+
+  .sub {
+    margin-top:calc(var(--head)*.20);
+    font-weight:500; font-size:var(--sub);
+    color:var(--ink-dim); line-height:1.3;
+  }
+
+  /* Address line. A hairline rule instead of a solid bar: a banner bar is
+     the single most "this is an advert" signal in a feed. */
+  .addr {
+    margin-top:calc(var(--head)*.30);
+    padding-top:calc(var(--head)*.22);
+    border-top:1px solid rgba(255,255,255,.20);
+    display:flex; align-items:center; gap:calc(var(--ip)*.9);
+  }
+  .tag {
+    font-size:calc(var(--ip)*.72); font-weight:600;
+    letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.28);
+    padding:calc(var(--ip)*.26) calc(var(--ip)*.5);
+  }
+  .ip {
+    font-family:'Silkscreen',monospace; font-weight:700;
+    font-size:var(--ip); color:var(--accent);
+    letter-spacing:.01em;
+  }
+
+  /* ---- formats --------------------------------------------------- */
+  body[data-f="4x5"] .frame {
+    --w:1080px; --h:1350px; --pad:66px;
+    --mark:26px; --eyebrow:27px; --head:96px; --sub:31px; --ip:33px;
+  }
+  body[data-f="1x1"] .frame {
+    --w:1200px; --h:1200px; --pad:70px;
+    --mark:27px; --eyebrow:28px; --head:98px; --sub:32px; --ip:34px;
+  }
+  body[data-f="191"] .frame {
+    --w:1200px; --h:628px; --pad:52px;
+    --mark:22px; --eyebrow:23px; --head:74px; --sub:26px; --ip:27px;
+  }
+  /* No-text variant for the native test. */
+  body[data-notext] .mark,
+  body[data-notext] .content { display:none; }
+  body[data-notext] .frame::after { background:none; }
+</style>
+</head>
+<body data-f="4x5">
+
+<div class="frame">
+  <div class="mark"><i></i>MineX</div>
+
+  <div class="content">
+    <div class="eyebrow" id="eyebrow">New update live</div>
+    <h1 id="head">Free rank when you join.</h1>
+    <div class="sub" id="sub">Java survival. Claim it on your first login.</div>
+    <div class="addr">
+      <span class="tag">Java</span>
+      <span class="ip" id="ip">fun.minex.gg</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ?f=4x5|1x1|191  &head=  &eyebrow=  &sub=  &ip=  &notext=1  &bg=file.jpg
+  const q = new URLSearchParams(location.search);
+  if (q.get('f')) document.body.dataset.f = q.get('f');
+  if (q.get('notext')) document.body.dataset.notext = '1';
+  if (q.get('bg')) document.documentElement.style.setProperty('--bg', `url('${q.get('bg')}')`);
+  if (q.get('pos')) document.documentElement.style.setProperty('--bg-pos', q.get('pos'));
+  for (const k of ['head','eyebrow','sub','ip']) {
+    if (q.get(k) !== null) document.getElementById(k).textContent = q.get(k);
+  }
+</script>
+</body>
+</html>
