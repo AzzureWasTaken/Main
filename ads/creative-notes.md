@@ -81,3 +81,18 @@ Worth keeping across the rebuild:
 - The orange/purple palette is distinctive and survives a dark-mode feed.
 - "Free for every new player" removes the usual "is this for me?" hesitation.
 - The IP is set in a high-contrast bar and is readable at small sizes.
+
+## Layout references
+
+`creative/ref-feed-1200x628.png`, `ref-square-1200x1200.png` and
+`ref-vertical-1080x1350.png` were built from this banner to show the
+recommended structure at each Reddit size.
+
+They are **layout references, not final assets.** The old logo, "New Update"
+sign and cracked badge are still visible because they are baked into the source
+image — removing them is the point of the rebuild, and it needs the original
+project file. The vertical reference is also visibly soft: a 766px-wide source
+cannot fill a 1080×1350 frame.
+
+Read them for the structure only: one headline, bottom-left, on a scrim, with
+the IP demoted to a quiet bar. Full spec in `creative-spec.md`.
