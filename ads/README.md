@@ -9,6 +9,9 @@ Campaign working files for `fun.minex.gg`.
 | `targeting.md` | Subreddit groups, demographics, schedule, measurement |
 | `creative-notes.md` | Review of the supplied banner + what to produce |
 | `creative-spec.md` | How to rebuild the creative for the feed |
+| `shot-list.md` | Screenshot settings and the six shots to capture |
+| `layout-4x5.md` | The 4:5 grid, with the reasoning behind each number |
+| `build-creative.sh` | Composes all three sizes from one screenshot |
 | `creative/v1-original.webp` | Banner as supplied (766×555) |
 | `creative/ref-*.png` | Layout references at the three Reddit sizes |
 
@@ -25,7 +28,9 @@ the **"Premium And Cracked"** badge is a likely ad-review rejection, and the
 - [x] Copy drafted
 - [x] Targeting drafted
 - [x] Layout references built at the three Reddit sizes
-- [ ] Creative rebuilt from fresh 1440p+ screenshots (see `creative-spec.md`)
+- [x] Composer script + 4:5 layout spec
+- [ ] Screenshots captured at 1440p+ (see `shot-list.md`)
+- [ ] Creative built and checked at 400px wide on a phone
 - [ ] Per-variant Discord invite codes created
 - [ ] Discord welcome channel checked for IP + rank-claim instructions
 - [ ] Open questions in `campaign-brief.md` answered
