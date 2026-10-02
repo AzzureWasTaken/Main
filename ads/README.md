@@ -13,6 +13,7 @@ Campaign working files for `fun.minex.gg`.
 | `layout-4x5.md` | The 4:5 grid, with the reasoning behind each number |
 | `build-creative.sh` | Composes all three sizes from one screenshot |
 | `design/` | **The graphic** — `ad.html` + `render.sh`, renders all sizes |
+| `banners/` | Animated server-list GIFs for minecraftsurvivalservers.net |
 | `creative/v1-original.webp` | Banner as supplied (766×555) |
 | `creative/ref-*.png` | Layout references at the three Reddit sizes |
 
