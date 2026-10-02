@@ -1,19 +1,22 @@
 # Server-list banners
 
-Animated banner for minecraftsurvivalservers.net, converted from
-`minex-mss-source.webm` (962×124, VP9, 6.8s, 25fps).
+Animated banners converted from 962×124 VP9 sources (6.8s, 25fps). Both
+cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 
-Cycles SURVIVAL → PAYOUTS → EVENTS → `mss.minex.gg`.
+| Set | For | Tracking IP |
+|---|---|---|
+| `minex-mss-*` | minecraftsurvivalservers.net | `mss.minex.gg` |
+| `minex-mcl-*` | (MCL listing) | `mcl.minex.gg` |
 
 ## Pick by the site's upload cap
 
-| File | Size | fps | Colours |
-|---|---|---|---|
-| `minex-mss-468x60-hi.gif` | 412 KB | 15 | 256 |
-| `minex-mss-468x60-mid.gif` | 294 KB | 12 | 160 |
-| `minex-mss-468x60-lo.gif` | 203 KB | 10 | 96 |
-| `minex-mss-468x60-tiny.gif` | 153 KB | 8 | 64 |
-| `minex-mss-962x124-native.gif` | 1.3 MB | 15 | 256 |
+| Rung | mss | mcl | fps | Colours |
+|---|---|---|---|---|
+| `hi` | 412 KB | 410 KB | 15 | 256 |
+| `mid` | 294 KB | 294 KB | 12 | 160 |
+| `lo` | 203 KB | 200 KB | 10 | 96 |
+| `tiny` | 153 KB | 155 KB | 8 | 64 |
+| `native` (962×124) | 1.3 MB | 1.3 MB | 15 | 256 |
 
 **Start with `mid`.** It is visually indistinguishable from `hi` at banner
 size and fits the 500 KB cap most lists use. Drop to `lo` or `tiny` only if
@@ -32,8 +35,12 @@ figure. Check the upload page for the real cap.
 
 ```bash
 ./webm-to-gif.sh minex-mss-source.webm
+./webm-to-gif.sh minex-mcl-source.webm
 W=728 H=90 ./webm-to-gif.sh minex-mss-source.webm   # leaderboard size
 ```
+
+The script names output after the source file, so rename the `-source-`
+segment out afterwards to match the files already here.
 
 ## Why the files are this big
 
