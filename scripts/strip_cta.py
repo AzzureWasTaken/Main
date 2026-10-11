@@ -13,6 +13,11 @@ which keeps it from locking onto orange gameplay — lava fills most of the
 frame in some of these clips and is the obvious false positive.
 
     python3 strip_cta.py INPUT.mp4 [-o OUTPUT.mp4] [--detect-only]
+    python3 strip_cta.py "C:/path/to/folder" --outdir cleaned
+
+Given a folder it processes every video inside, writes the cleaned copies to
+--outdir (default: a "no-ad" folder alongside), and prints a summary. Files
+already done are skipped, so an interrupted run can simply be restarted.
 
 Exits non-zero if the banner is still detectable in the output, so a batch
 loop can stop rather than quietly shipping a video with the ad still in it.
@@ -134,54 +139,105 @@ def detect(path, info, workdir):
     return tuple(box), min(hits), max(hits)
 
 
+VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
+
+
+def process(path, out, args):
+    """Returns (status, detail). Status: cleaned | no-banner | failed."""
+    info = probe(path)
+    work = tempfile.mkdtemp(prefix="strip_cta_")
+    try:
+        box, t0, t1 = detect(path, info, work)
+        name = os.path.basename(path)
+        if not box:
+            print(f"  {name}: no banner found")
+            return "no-banner", ""
+        x0, y0, x1, y1 = box
+        p = args.pad + 2
+        dx = max(1, x0 - p); dy = max(1, y0 - p)
+        dw = min(info["w"] - dx - 1, (x1 - x0 + 1) + 2 * p)
+        dh = min(info["h"] - dy - 1, (y1 - y0 + 1) + 2 * p)
+        e0 = max(0.0, t0 - 0.30)
+        e1 = min(info["duration"], t1 + 0.30)
+        detail = f"x{x0}-{x1} y{y0}-{y1} @ {t0:.2f}-{t1:.2f}s"
+        print(f"  {name}: banner {detail}")
+        if args.detect_only:
+            return "no-banner" if not box else "detected", detail
+
+        run(["ffmpeg", "-v", "error", "-i", path,
+             "-vf", f"delogo=x={dx}:y={dy}:w={dw}:h={dh}:"
+                    f"enable='between(t,{e0:.2f},{e1:.2f})'",
+             "-c:v", "libx264", "-crf", str(args.crf), "-preset", "slow",
+             "-pix_fmt", "yuv420p", "-c:a", "copy",
+             "-movflags", "+faststart", out, "-y"])
+
+        if detect(out, probe(out), work)[0]:
+            print(f"    FAILED - banner still present in {out}")
+            return "failed", detail
+        print(f"    clean -> {out}")
+        return "cleaned", detail
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("input")
-    ap.add_argument("-o", "--output")
+    ap.add_argument("input", help="a video file, or a folder of them")
+    ap.add_argument("-o", "--output", help="output file (single input only)")
+    ap.add_argument("--outdir", help="output folder (folder input)")
     ap.add_argument("--detect-only", action="store_true")
     ap.add_argument("--crf", type=int, default=16)
     ap.add_argument("--pad", type=int, default=8)
     a = ap.parse_args()
 
-    info = probe(a.input)
-    work = tempfile.mkdtemp(prefix="strip_cta_")
-    try:
-        box, t0, t1 = detect(a.input, info, work)
-        if not box:
-            print(f"[{os.path.basename(a.input)}] no CTA banner found "
-                  f"- nothing to do")
-            return 0
-        x0, y0, x1, y1 = box
-        # widen by the scan step plus padding; clamp inside the frame
-        p = a.pad + 2
-        dx = max(1, x0 - p); dy = max(1, y0 - p)
-        dw = min(info["w"] - dx - 1, (x1 - x0 + 1) + 2 * p)
-        dh = min(info["h"] - dy - 1, (y1 - y0 + 1) + 2 * p)
-        # the 4fps scan can miss the first/last quarter-second; pad the window
-        e0 = max(0.0, t0 - 0.30)
-        e1 = min(info["duration"], t1 + 0.30)
-        print(f"[{os.path.basename(a.input)}] banner x{x0}-{x1} y{y0}-{y1} "
-              f"on screen {t0:.2f}s-{t1:.2f}s of {info['duration']:.2f}s")
-        if a.detect_only:
-            return 0
-
+    if os.path.isfile(a.input):
         out = a.output or (os.path.splitext(a.input)[0] + "-noad.mp4")
-        run(["ffmpeg", "-v", "error", "-i", a.input,
-             "-vf", f"delogo=x={dx}:y={dy}:w={dw}:h={dh}:"
-                    f"enable='between(t,{e0:.2f},{e1:.2f})'",
-             "-c:v", "libx264", "-crf", str(a.crf), "-preset", "slow",
-             "-pix_fmt", "yuv420p", "-c:a", "copy",
-             "-movflags", "+faststart", out, "-y"])
+        status, _ = process(a.input, out, a)
+        return 1 if status == "failed" else 0
 
-        # prove it: re-scan the render we just produced
-        vbox, _, _ = detect(out, probe(out), work)
-        if vbox:
-            print(f"  FAILED - banner still detected at {vbox} in {out}")
-            return 1
-        print(f"  clean -> {out}")
+    if not os.path.isdir(a.input):
+        print(f"not found: {a.input}", file=sys.stderr)
+        return 2
+
+    vids = sorted(f for f in os.listdir(a.input)
+                  if os.path.splitext(f)[1].lower() in VIDEO_EXTS
+                  and not f.endswith("-noad.mp4"))
+    if not vids:
+        print(f"no videos in {a.input}")
         return 0
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+    outdir = a.outdir or os.path.join(a.input, "no-ad")
+    if not a.detect_only:
+        os.makedirs(outdir, exist_ok=True)
+    print(f"{len(vids)} video(s) in {a.input}")
+
+    results = []
+    for i, f in enumerate(vids, 1):
+        src = os.path.join(a.input, f)
+        out = os.path.join(outdir, os.path.splitext(f)[0] + "-noad.mp4")
+        print(f"[{i}/{len(vids)}] {f}")
+        if not a.detect_only and os.path.exists(out):
+            print("  already done, skipping")
+            results.append((f, "skipped", ""))
+            continue
+        try:
+            status, detail = process(src, out, a)
+        except subprocess.CalledProcessError as e:
+            print(f"  ffmpeg failed: {e.stderr.strip().splitlines()[-1:]}")
+            status, detail = "failed", "ffmpeg error"
+        results.append((f, status, detail))
+
+    print("\n==== summary ====")
+    for f, status, detail in results:
+        print(f"  {status:9s}  {f}  {detail}")
+    bad = [r for r in results if r[1] == "failed"]
+    none = [r for r in results if r[1] == "no-banner"]
+    if none:
+        print(f"\n{len(none)} file(s) had no banner found - check these by eye,"
+              f" the banner may differ in colour or position.")
+    if bad:
+        print(f"\n{len(bad)} FAILED")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
