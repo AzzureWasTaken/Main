@@ -1,0 +1,10 @@
+# The MineXVideo skill ships from a Windows zip; its shell scripts break with
+# CRLF ("set -euo pipefail\r" is an invalid option). Keep these LF everywhere.
+*.sh    text eol=lf
+*.py    text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+python3-shim text eol=lf
