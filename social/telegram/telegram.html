@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>MineX Telegram Card</title>
+<link rel="stylesheet" href="../../ads/design/fonts.css">
+<style>
+  :root{--y:#ffc61a;--bg:#12110c;--ink:#f3efe2;}
+  html,body{margin:0;background:#000;}
+  .card{position:relative;width:1280px;height:720px;overflow:hidden;background:var(--bg);font-family:'Archivo',Arial,sans-serif;color:var(--ink);
+    background-image:linear-gradient(rgba(255,198,26,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,198,26,.05) 1px,transparent 1px);background-size:40px 40px;}
+  .bar{position:absolute;left:0;right:0;height:14px;background:var(--y);} .bar.t{top:0} .bar.b{bottom:0}
+  .art{position:absolute;inset:0;}
+  .copy{position:absolute;left:80px;top:74px;}
+  .eyebrow{display:flex;align-items:center;gap:14px;}
+  .pill{background:var(--y);color:var(--bg);font-weight:800;font-size:15px;letter-spacing:3px;padding:12px 16px;}
+  .open{color:#f1e5b8;font-weight:800;font-size:16px;letter-spacing:2.5px;}
+  h1{margin:24px 0 0;font-weight:800;font-size:112px;line-height:.86;color:var(--y);letter-spacing:-2px;}
+  .lede{margin:28px 0 0;font-weight:600;font-size:28px;line-height:1.36;color:#fff;letter-spacing:-.3px;}
+  ul{list-style:none;margin:30px 0 0;padding:0;display:grid;grid-template-columns:324px 260px;row-gap:14px;font-weight:600;font-size:20px;color:#fff;}
+  li{display:flex;align-items:center;gap:12px;} li::before{content:"";width:12px;height:12px;background:var(--y);}
+  .ctas{position:absolute;left:80px;top:563px;display:flex;gap:14px;}
+  .cta{height:83px;box-sizing:border-box;padding:16px 24px 0;}
+  .cta small{display:block;font-weight:800;font-size:13px;letter-spacing:2px;}
+  .cta b{display:block;font-weight:800;font-size:28px;margin-top:2px;letter-spacing:-.3px;}
+  .java{background:var(--y);color:var(--bg);} .disc{border:3px solid #8a6d1d;padding-top:13px;color:#fff;} .disc small{color:#d8ccaa;}
+</style></head>
+<body>
+<div class="card">
+  <svg class="art" width="1280" height="720" viewBox="0 0 1280 720" shape-rendering="crispEdges">
+    <rect x="918" y="120" width="450" height="450" fill="none" stroke="rgba(255,198,26,.17)" stroke-width="12" transform="rotate(45 1143 345)"/>
+    <!-- pixel coin, 10px grid -->
+    <g fill="#ffc61a">
+      <rect x="965" y="245" width="170" height="230"/><rect x="945" y="265" width="210" height="190"/><rect x="935" y="285" width="230" height="150"/>
+    </g>
+    <rect x="965" y="285" width="170" height="20" fill="#ffd968"/>
+    <rect x="945" y="305" width="20" height="110" fill="#ffd968"/>
+    <rect x="1135" y="305" width="20" height="110" fill="#d99c0a"/>
+    <rect x="965" y="415" width="170" height="20" fill="#d99c0a"/>
+    <g fill="#12110c">
+      <rect x="990" y="315" width="25" height="90"/><rect x="1090" y="315" width="25" height="90"/>
+      <rect x="1015" y="340" width="25" height="25"/><rect x="1065" y="340" width="25" height="25"/><rect x="1040" y="365" width="25" height="25"/>
+    </g>
+  </svg>
+  <div class="bar t"></div><div class="bar b"></div>
+  <div class="copy">
+    <div class="eyebrow"><span class="pill">BETA SEASON</span><span class="open">NOW OPEN</span></div>
+    <h1>MineX<br>SMP</h1>
+    <p class="lede">Items that hold real value.<br>Compete for real payouts.</p>
+    <ul><li>20 Homes</li><li>+14 Team members</li><li>/feed</li><li>/rename</li></ul>
+  </div>
+  <div class="ctas">
+    <div class="cta java"><small>JAVA IP</small><b>fun.minex.gg</b></div>
+    <div class="cta disc"><small>DISCORD</small><b>discord.gg/minex</b></div>
+  </div>
+</div>
+</body></html>
