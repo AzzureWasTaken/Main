@@ -1,0 +1,15 @@
+# The MineXVideo skill ships from a Windows zip; its shell scripts break with
+# CRLF ("set -euo pipefail\r" is an invalid option). Keep these LF everywhere.
+*.sh    text eol=lf
+*.py    text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+python3-shim text eol=lf
+
+# Video is committed as ordinary blobs, NOT Git LFS. LFS was set up here and
+# had to be removed: this environment's network policy blocks lfs.github.com,
+# so a cloud session can neither push nor pull LFS objects. Re-enable it only
+# once that host is allowed, otherwise pushes fail at the verify step.

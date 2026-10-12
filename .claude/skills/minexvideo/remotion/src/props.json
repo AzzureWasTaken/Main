@@ -1,0 +1,23 @@
+{
+  "videoSrc": "job_example/source.mp4",
+  "beats": [
+    {
+      "kind": "hook_title",
+      "start_sec": 0.0,
+      "end_sec": 2.0,
+      "title": "ALMOST\nDIED",
+      "emoji": "💀",
+      "accent": "redstone",
+      "reason": "Example plan — render.sh rewrites this file before every render."
+    }
+  ],
+  "zoom": [],
+  "captions": [],
+  "accent": "grass",
+  "grade": 1,
+  "apertura": 1.12,
+  "fps": 60,
+  "width": 1080,
+  "height": 1920,
+  "durationInFrames": 600
+}

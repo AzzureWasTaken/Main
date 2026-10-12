@@ -1,0 +1,164 @@
+[
+  {
+    "file": "achievement-chime.mp3",
+    "type": "sfx",
+    "path": "sfx/achievement-chime.mp3",
+    "desc": "Achievement / legendary-catch chime",
+    "tags": ["achievement", "win", "chime", "loot"],
+    "duration": 1.8,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "ding.mp3",
+    "type": "sfx",
+    "path": "sfx/ding.mp3",
+    "desc": "Cheerful ding for counters and item cards",
+    "tags": ["ding", "counter", "item", "ui"],
+    "duration": 0.8,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "dragon-roar.mp3",
+    "type": "sfx",
+    "path": "sfx/dragon-roar.mp3",
+    "desc": "Big dragon roar with echo, for the Ender Dragon",
+    "tags": ["dragon", "roar", "boss", "end"],
+    "duration": 3.1,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "epic-explosion.mp3",
+    "type": "sfx",
+    "path": "sfx/epic-explosion.mp3",
+    "desc": "Big cinematic explosion with debris, for launches and epic impacts",
+    "tags": ["explosion", "tnt", "impact", "epic"],
+    "duration": 2.0,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "epic-landing.mp3",
+    "type": "sfx",
+    "path": "sfx/epic-landing.mp3",
+    "desc": "Heavy landing on stone with rumble, for epic landing poses",
+    "tags": ["landing", "impact", "epic", "fall"],
+    "duration": 2.0,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "fail.mp3",
+    "type": "sfx",
+    "path": "sfx/fail.mp3",
+    "desc": "Sad trombone for fails and facepalms",
+    "tags": ["fail", "comedy", "trombone", "death"],
+    "duration": 1.5,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "falling-wind.mp3",
+    "type": "sfx",
+    "path": "sfx/falling-wind.mp3",
+    "desc": "Free-fall wind / high-speed flight",
+    "tags": ["wind", "fall", "elytra", "speed"],
+    "duration": 3.1,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "fireworks.mp3",
+    "type": "sfx",
+    "path": "sfx/fireworks.mp3",
+    "desc": "Fireworks for celebrations",
+    "tags": ["fireworks", "celebration", "win"],
+    "duration": 3.1,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "fish-splash.mp3",
+    "type": "sfx",
+    "path": "sfx/fish-splash.mp3",
+    "desc": "Fish splashing out of the water",
+    "tags": ["fish", "water", "splash", "fishing"],
+    "duration": 1.6,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "impact.mp3",
+    "type": "sfx",
+    "path": "sfx/impact.mp3",
+    "desc": "Dry punchy hit for a punchline",
+    "tags": ["impact", "hit", "punchline", "meme"],
+    "duration": 1.0,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "mc-block-break.mp3",
+    "type": "sfx",
+    "path": "sfx/mc-block-break.mp3",
+    "desc": "Stone block shattering to pieces",
+    "tags": ["block", "break", "stone", "minecraft"],
+    "duration": 1.5,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "mc-firework-rocket.mp3",
+    "type": "sfx",
+    "path": "sfx/mc-firework-rocket.mp3",
+    "desc": "Firework rocket launching, Minecraft elytra style",
+    "tags": ["rocket", "elytra", "firework", "minecraft"],
+    "duration": 2.0,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "mc-mining.mp3",
+    "type": "sfx",
+    "path": "sfx/mc-mining.mp3",
+    "desc": "Mining stone with a pickaxe: repeated dry hits, Minecraft style",
+    "tags": ["mining", "pickaxe", "stone", "minecraft"],
+    "duration": 3.1,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "mc-mob-hit.mp3",
+    "type": "sfx",
+    "path": "sfx/mc-mob-hit.mp3",
+    "desc": "Dry hit on a mob, Minecraft style",
+    "tags": ["hit", "mob", "pvp", "minecraft"],
+    "duration": 0.8,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "orchestral-swell.mp3",
+    "type": "sfx",
+    "path": "sfx/orchestral-swell.mp3",
+    "desc": "Orchestral swell to underline a reveal / scene change",
+    "tags": ["swell", "reveal", "epic", "transition"],
+    "duration": 1.8,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "pop.mp3",
+    "type": "sfx",
+    "path": "sfx/pop.mp3",
+    "desc": "Short pop for when a text appears",
+    "tags": ["pop", "text", "ui", "appear"],
+    "duration": 0.5,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "riser.mp3",
+    "type": "sfx",
+    "path": "sfx/riser.mp3",
+    "desc": "Tension riser before a reveal",
+    "tags": ["riser", "tension", "reveal", "buildup"],
+    "duration": 2.0,
+    "date": "2026-08-29"
+  },
+  {
+    "file": "whoosh.mp3",
+    "type": "sfx",
+    "path": "sfx/whoosh.mp3",
+    "desc": "Transition whoosh between shots / on a zoom",
+    "tags": ["whoosh", "transition", "zoom", "cut"],
+    "duration": 1.2,
+    "date": "2026-08-29"
+  }
+]

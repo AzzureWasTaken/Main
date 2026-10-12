@@ -1,0 +1,6 @@
+# MineXVideo skill — local secrets and build artifacts
+.claude/skills/minexvideo/api-keys.env
+.claude/skills/minexvideo/.venv/
+.claude/skills/minexvideo/remotion/node_modules/
+.claude/skills/minexvideo/remotion/public/
+.claude/skills/minexvideo/config.json

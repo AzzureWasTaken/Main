@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# `python3` shim for Windows + Git Bash.
+#
+# The skill's scripts follow POSIX convention and call `python3`; Windows only
+# ships `python`. This bridges the two WITHOUT hardcoding a user name or a
+# Python version, so the same file works on any machine — copy it to
+# ~/bin/python3 and it just works.
+#
+# Install:  mkdir -p ~/bin && cp python3-shim ~/bin/python3
+#
+# Note: this script is itself named `python3`, so it must never look for
+# `python3` on the PATH — that would find itself and loop forever. It looks
+# for `python` only, then falls back to scanning the usual install folders.
+#
+# The Microsoft Store stub (...\WindowsApps\python.exe) is skipped on purpose:
+# it is not an interpreter, it just opens the Store and prints
+# "Python was not found".
+
+# 1. A real `python` already on the PATH.
+p="$(command -v python 2>/dev/null || true)"
+if [ -n "$p" ]; then
+  case "$p" in
+    *WindowsApps*) ;;                      # Store stub - keep looking
+    *) exec "$p" "$@" ;;
+  esac
+fi
+
+# 2. The usual per-user install locations, newest version first. Covers a PC
+#    where Python was just installed and this shell has not seen the new PATH
+#    yet (Windows processes inherit the environment from when they started).
+for d in "${LOCALAPPDATA:-$USERPROFILE/AppData/Local}/Programs/Python" \
+         "$USERPROFILE/AppData/Local/Programs/Python" \
+         "/c/Program Files/Python"* "/c/Python3"*; do
+  [ -d "$d" ] || continue
+  for exe in $(ls -d "$d"/Python3*/python.exe "$d"/python.exe 2>/dev/null | sort -r); do
+    [ -x "$exe" ] && exec "$exe" "$@"
+  done
+done
+
+echo "[error] python3 shim: no Python interpreter found." >&2
+echo "        Install it with:  winget install --id Python.Python.3.12 -e" >&2
+echo "        Then close and reopen the terminal so it sees the new PATH." >&2
+exit 1
