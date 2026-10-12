@@ -34,6 +34,8 @@ MAX_H_FRAC   = 0.22   # ...and the box it encloses is never tall
 SEARCH_TOP   = 0.55   # only look in the lower part of the frame
 MAX_FILL     = 0.25   # border rows are a small share of the box's height
 MAX_EDGE_DEV = 20     # ...and they line up with each other, in pixels
+SCAN_FPS     = 10     # detection sampling rate
+EDGE_PAD     = 0.60   # seconds of slack each side of the detected window
 
 
 def run(cmd, **kw):
@@ -112,31 +114,67 @@ def gold_bbox(img, w, h):
     return min(starts), y0, max(ends), y1
 
 
+def _border_present(px, w, box, tol=0.75):
+    """Is the banner's gold outline drawn at this exact box, in this frame?
+
+    Once the box is known, presence is a question about four specific lines
+    of pixels, not about the frame as a whole. That matters because the
+    shape gates in gold_bbox() reject a banner drawn over lava: the lava
+    merges with the border and the result no longer looks like an outline.
+    Testing the four border lines where they are known to be sidesteps that
+    entirely - lava may be the same colour, but it is not gold along all
+    four edges of one rectangle at once.
+    """
+    x0, y0, x1, y1 = box
+    checks = []
+    for y in (y0, y1):                       # top and bottom edges
+        if 0 <= y < len(range(0, 1)) + y:    # guard below
+            pass
+        pts = [px[x, y] for x in range(x0, x1 + 1, 3)]
+        checks.append(sum(1 for p in pts if is_gold(*p)) / max(1, len(pts)))
+    for x in (x0, x1):                       # left and right edges
+        pts = [px[x, y] for y in range(y0, y1 + 1)]
+        checks.append(sum(1 for p in pts if is_gold(*p)) / max(1, len(pts)))
+    return all(c >= tol for c in checks)
+
+
 def detect(path, info, workdir):
-    """Return (box, t_first, t_last) or (None, None, None)."""
+    """Return (box, t_first, t_last) or (None, None, None).
+
+    Two passes. The first finds WHERE the banner is, using the shape gates,
+    which need a frame whose background does not confuse them. The second
+    fixes that box and asks WHEN it is on screen by checking its border
+    directly - catching the frames the first pass cannot judge.
+    """
     from PIL import Image
     frames = os.path.join(workdir, "scan")
     os.makedirs(frames, exist_ok=True)
-    # 4 fps is plenty to find a banner that sits on screen for seconds
-    run(["ffmpeg", "-v", "error", "-i", path, "-vf", "fps=4",
+    run(["ffmpeg", "-v", "error", "-i", path, "-vf", f"fps={SCAN_FPS}",
          "-f", "image2", os.path.join(frames, "%05d.png"), "-y"])
-    hits = []
-    box = None
-    for name in sorted(os.listdir(frames)):
-        idx = int(os.path.splitext(name)[0]) - 1
-        t = idx / 4.0
-        b = gold_bbox(Image.open(os.path.join(frames, name)).convert("RGB"),
-                      info["w"], info["h"])
+    names = sorted(os.listdir(frames))
+
+    # pass 1 - where. The most frequently seen box wins, so one odd frame
+    # cannot shift it.
+    seen = {}
+    for name in names:
+        img = Image.open(os.path.join(frames, name)).convert("RGB")
+        b = gold_bbox(img, info["w"], info["h"])
         if b:
-            hits.append(t)
-            if box is None:
-                box = list(b)
-            else:  # union, so a box that animates in is fully covered
-                box[0] = min(box[0], b[0]); box[1] = min(box[1], b[1])
-                box[2] = max(box[2], b[2]); box[3] = max(box[3], b[3])
+            seen[b] = seen.get(b, 0) + 1
+    if not seen:
+        return None, None, None
+    box = max(seen.items(), key=lambda kv: kv[1])[0]
+
+    # pass 2 - when.
+    hits = []
+    for name in names:
+        idx = int(os.path.splitext(name)[0]) - 1
+        img = Image.open(os.path.join(frames, name)).convert("RGB")
+        if _border_present(img.load(), info["w"], box):
+            hits.append(idx / SCAN_FPS)
     if not hits:
         return None, None, None
-    return tuple(box), min(hits), max(hits)
+    return box, min(hits), max(hits)
 
 
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
@@ -157,8 +195,8 @@ def process(path, out, args):
         dx = max(1, x0 - p); dy = max(1, y0 - p)
         dw = min(info["w"] - dx - 1, (x1 - x0 + 1) + 2 * p)
         dh = min(info["h"] - dy - 1, (y1 - y0 + 1) + 2 * p)
-        e0 = max(0.0, t0 - 0.30)
-        e1 = min(info["duration"], t1 + 0.30)
+        e0 = max(0.0, t0 - EDGE_PAD)
+        e1 = min(info["duration"], t1 + EDGE_PAD)
         detail = f"x{x0}-{x1} y{y0}-{y1} @ {t0:.2f}-{t1:.2f}s"
         print(f"  {name}: banner {detail}")
         if args.detect_only:
