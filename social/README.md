@@ -10,4 +10,4 @@ Beta-season card. Everything is vector or CSS, including the pixel coin and diam
 ## reddit/ (1080×1350)
 Halloween LORD offer for `red.minex.gg`. The layout matches the approved version. These parts are still placeholders:
 - `bg-placeholder.jpg`, `logo-coin.png` and `badge-lord.png` are cropped from the 600px email screenshot, so they're soft. Replace them with the source art.
-- The spider and cobweb decoration, the pumpkin icons (pill and bullets) and the Discord logos aren't drawn yet. The pumpkins are plain orange squares for now.
+- Spider, cobweb, pumpkin icons and Discord logos are drawn as PNGs (`web-spider.png`, `pumpkin*.png`, `discord.png`).
