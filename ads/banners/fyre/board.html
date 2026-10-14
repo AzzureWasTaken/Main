@@ -1,0 +1,81 @@
+<title>Fyre Banner Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: one dark Nether-stone column; each banner sits on its own slab with the spec beside it. Deliberately single dark theme. */
+:root {
+  --bg: #170b0b;
+  --slab: #241212;
+  --line: #3d1d1a;
+  --fg: #f4e3d4;
+  --muted: #b39283;
+  --lava: #ff8a1f;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Chakra Petch", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--body); }
+main {
+  max-width: 1040px; margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 32px;
+}
+header { display: grid; gap: 6px; }
+h1 { font: 700 clamp(28px, 6vw, 44px)/1 var(--display); color: var(--lava); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+section { display: grid; gap: 12px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+h2 { font: 400 15px/1.2 var(--display); letter-spacing: .06em; margin: 0; }
+.spec { font: 13px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.slab { background: var(--slab); border: 1px solid var(--line); padding: 16px; overflow-x: auto; }
+.slab img { display: block; image-rendering: pixelated; max-width: 100%; height: auto; }
+.zoom img { width: 936px; max-width: 100%; }
+.note { margin: 0; color: var(--muted); font-size: 14px; max-width: 65ch; }
+.list { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.row { background: var(--slab); display: grid; grid-template-columns: 36px 1fr; gap: 8px 14px; padding: 12px; align-items: center; }
+.rank { font: 700 18px var(--display); color: var(--muted); text-align: center; }
+.row img { image-rendering: pixelated; max-width: 100%; height: auto; display: block; }
+.row .meta { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 16px; font: 13px var(--mono); color: var(--muted); }
+.ph { width: 468px; max-width: 100%; aspect-ratio: 468 / 60; background: repeating-linear-gradient(45deg, var(--line) 0 6px, var(--slab) 6px 12px); }
+.on { color: var(--lava); }
+footer { color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+code { font-family: var(--mono); font-size: .92em; color: var(--fg); }
+</style>
+
+<main>
+  <header>
+    <h1>FYRE</h1>
+    <p>Animated server-list banners for a lava PvP server. Molten lava floor, flickering flames, rising embers, a glint across the logo, and three rotating lines: LAVA PVP SERVER, FIGHT ON THE LAVA, JOIN THE BLAZE!</p>
+  </header>
+
+  <section>
+    <div class="head"><h2>Native, 962×124</h2><span class="spec">GIF · 48 frames · 12.5 fps · 1.09 MB</span></div>
+    <div class="slab"><img src="fyre-962x124.gif" width="962" height="124" alt="Fyre banner: orange pixel logo over a lava floor with rotating PvP taglines"></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Server list, 468×60</h2><span class="spec">GIF · 48 frames · 96 colours · 710 KB</span></div>
+    <div class="slab"><img src="fyre-468x60.gif" width="468" height="60" alt="Fyre banner at 468 by 60"></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Lite, 468×60</h2><span class="spec">GIF · 24 frames · 6 fps · 64 colours · 332 KB</span></div>
+    <div class="slab zoom"><img src="fyre-468x60-lite.gif" width="468" height="60" alt="Fyre banner, lightweight version, shown at 2x"></div>
+    <p class="note">Shown at 2× so you can check the pixels. Use this one if a listing rejects the 710 KB file; most cap uploads around 500 KB.</p>
+  </section>
+
+  <section>
+    <div class="head"><h2>In a server list</h2><span class="spec">mock listing</span></div>
+    <div class="list">
+      <div class="row"><span class="rank">#1</span><div class="ph" role="img" aria-label="Another server's banner"></div><div class="meta"><span>another-server.net</span><span>1,204 / 2,000</span></div></div>
+      <div class="row"><span class="rank on">#2</span><img src="fyre-468x60.gif" width="468" height="60" alt="Fyre banner in a listing"><div class="meta"><span class="on">play.fyre.gg</span><span>PvP · Lava</span><span>318 / 1,000</span></div></div>
+      <div class="row"><span class="rank">#3</span><div class="ph" role="img" aria-label="Another server's banner"></div><div class="meta"><span>someserver.org</span><span>297 / 500</span></div></div>
+    </div>
+    <p class="note">The IP and player counts here are placeholders. Send me the real IP and I'll put it on the last frame of the banner.</p>
+  </section>
+
+  <footer>Source: <code>ads/banners/fyre/make-fyre-banner.py</code>. Change the text with <code>--lines "…" "…" --ip play.yourserver.net</code>.</footer>
+</main>
