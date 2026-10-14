@@ -6,7 +6,7 @@ the Discord server-banner sizes. Text stays in the centre, which Discord
 never crops. With --bg, the pixel text goes over a 16:9 crop of that image
 instead of the drawn scene.
 
-    python3 make-fyre-banner.py [--bg fyre-background.webp] [--logo fyre-logo.png] [--tagline fyre-tagline.png] [--sub "PVP TOURNAMENTS" --sub2 "AND MORE"]
+    python3 make-fyre-banner.py [--bg fyre-background.webp] [--logo fyre-logo.png] [--tagline fyre-tagline.png] [--sub "PVP TOURNAMENTS" --sub2 ""]
 """
 import argparse, math, random
 from PIL import Image, ImageFilter
@@ -79,7 +79,7 @@ LAVA_Y = 112
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--sub', default='PVP TOURNAMENTS')
-    ap.add_argument('--sub2', default='AND MORE')
+    ap.add_argument('--sub2', default='', help='small second line with crossed swords; empty leaves both out')
     ap.add_argument('--out', default='fyre-banner')
     ap.add_argument('--bg', help='background image; omit to draw the pixel scene')
     ap.add_argument('--logo', help='logo image to use in place of the pixel FYRE title')
@@ -207,7 +207,8 @@ def main():
         draw_text('FYRE', title_s, title_y, (255,242,130), (232,60,8), (40,8,8), shadow=3, glint=False)
     if not args.tagline:
         draw_text(args.sub, 2, sub_y, (255,255,255), (255,196,90), (30,6,8))
-    sx, sw = draw_text(args.sub2, 1, sub_y+18, (255,226,150), (255,170,60), (30,6,8), shadow=1)
+    if args.sub2:
+        sx, sw = draw_text(args.sub2, 1, sub_y+18, (255,226,150), (255,170,60), (30,6,8), shadow=1)
 
     # crossed diamond swords either side of the subtitle
     def sword(ox, oy, flip, k=2):
@@ -222,7 +223,7 @@ def main():
             for dx in range(k):
                 for dy in range(k):
                     px[X+dx, oy+k*y+dy] = c
-    for base in (sx - 20, sx + sw + 6):
+    for base in ((sx - 20, sx + sw + 6) if args.sub2 else ()):
         sword(base, sub_y+14, False, 1)
         sword(base, sub_y+14, True, 1)
 
@@ -262,7 +263,7 @@ def main():
             if args.logo:
                 overlay(args.logo, round(W * .66), top=round(H * .06))
             if args.tagline:
-                overlay(args.tagline, round(W * .8), bottom=(sub_y + 16) * scale)
+                overlay(args.tagline, round(W * .8), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
             base.save(out, optimize=True)
         else:
             text.save(out, optimize=True)
