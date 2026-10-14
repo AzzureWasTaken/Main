@@ -6,10 +6,11 @@ the Discord server-banner sizes. Text stays in the centre, which Discord
 never crops. With --bg, the pixel text goes over a 16:9 crop of that image
 instead of the drawn scene.
 
-    python3 make-fyre-banner.py [--bg fyre-background.webp] [--logo fyre-logo.png] [--tagline fyre-tagline.png] [--sub "PVP TOURNAMENTS" --sub2 ""]
+    python3 make-fyre-banner.py [--bg fyre-background.webp] [--logo fyre-logo.png] [--tagline fyre-tagline.png] [--halloween] [--sub "PVP TOURNAMENTS" --sub2 ""]
 """
 import argparse, math, random
 from PIL import Image, ImageFilter
+import halloween
 
 FONT = {  # 5x7 pixel glyphs
  'A':["01110","10001","10001","11111","10001","10001","10001"],
@@ -84,6 +85,7 @@ def main():
     ap.add_argument('--bg', help='background image; omit to draw the pixel scene')
     ap.add_argument('--logo', help='logo image to use in place of the pixel FYRE title')
     ap.add_argument('--tagline', help='tagline image to use in place of the --sub pixel line')
+    ap.add_argument('--halloween', action='store_true', help='add the Halloween layer (halloween.py)')
     ap.add_argument('--bg-top', type=float, default=.2, help='where the 16:9 crop starts, as a fraction of the image height')
     args = ap.parse_args()
     rng = random.Random(11)
@@ -229,7 +231,7 @@ def main():
 
     for scale in (4, 8):
         W, H = GW*scale, GH*scale
-        out = f'{args.out}-{W}x{H}.png'
+        out = f'{args.out}{"-halloween" if args.halloween else ""}-{W}x{H}.png'
         text = img.resize((W, H), Image.NEAREST)
         if args.bg:
             photo = Image.open(args.bg).convert('RGB')
@@ -237,6 +239,8 @@ def main():
             ch = round(pw * GH / GW)
             top = min(round(ph * args.bg_top), ph - ch)
             base = photo.crop((0, top, pw, top + ch)).resize((W, H), Image.LANCZOS)
+            if args.halloween:
+                base = halloween.scene(base)
             # darken the bottom strip so the tagline reads over the lava glow
             shade = Image.new('L', (W, H))
             sp = shade.load()
@@ -246,7 +250,7 @@ def main():
                     sp[x, y] = int(190 * min(1, t*1.4))
             base = Image.composite(Image.new('RGB', (W, H), (14,3,4)), base, shade)
             base.paste(text, (0, 0), text)
-            def overlay(path, width, top=None, bottom=None):
+            def overlay(path, width, top=None, bottom=None, spooky=False):
                 im = Image.open(path).convert('RGBA')
                 im = im.crop(im.getchannel('A').getbbox())
                 im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
@@ -254,6 +258,10 @@ def main():
                 pos = ((W - width)//2, y)
                 # soft dark halo so the gold separates from the orange background
                 pad = W // 20
+                if spooky:
+                    halloween.logo_halo(base, im, pos, pad, W)
+                    base.paste(im, pos, im)
+                    return (pos[0], pos[1], pos[0] + im.width, pos[1] + im.height)
                 halo = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
                 halo.paste(im.getchannel('A'), (pad, pad))
                 halo = halo.filter(ImageFilter.MaxFilter(2*(W//240)+1)).filter(ImageFilter.GaussianBlur(W/80))
@@ -261,7 +269,9 @@ def main():
                 base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), halo)
                 base.paste(im, pos, im)
             if args.logo:
-                overlay(args.logo, round(W * .66), top=round(H * .06))
+                box = overlay(args.logo, round(W * .66), top=round(H * .06), spooky=args.halloween)
+                if args.halloween:
+                    halloween.cobwebs(base, box)
             if args.tagline:
                 overlay(args.tagline, round(W * .94), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
             base.save(out, optimize=True)
