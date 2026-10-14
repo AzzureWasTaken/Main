@@ -4,6 +4,7 @@ Every position is in 960x540 space and scaled by f = W/960, so both output
 sizes line up. Positions are tied to fyre-background.webp at --bg-top 0.2.
 """
 import math, random
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 PUMPKIN = ["..g..",
@@ -12,37 +13,8 @@ PUMPKIN = ["..g..",
            "OOOOO",
            "OYYYO",
            "oOOOo"]
-BAT = ["X.......X",
-       "XX..X..XX",
-       ".XXXXXXX.",
-       "..XX.XX..",
-       "...X.X..."]
-GHAST = [".WWWWWWW.",
-         "WWWWWWWWW",
-         "WEEWWWEEW",
-         "WWWWWWWWW",
-         "WWWMMMWWW",
-         "WWWWWWWWW",
-         ".WWWWWWW.",
-         ".T.T.T.T.",
-         ".T.T...T.",
-         "...T....."]
-WITHER = [".HHHH..",
-          ".HeHe..",
-          ".HHHH..",
-          "..BB..S",
-          ".ABBA.S",
-          "A.BB.AS",
-          "..BB...",
-          ".L..L..",
-          ".L..L..",
-          ".L..L.."]
 COLORS = {
     'g': (70,120,30), 'O': (232,120,18), 'o': (176,78,10), 'Y': (255,232,96),
-    'X': (16,6,14),
-    'W': (236,236,236), 'E': (40,40,40), 'M': (90,90,90), 'T': (205,205,205),
-    'H': (58,58,62), 'e': (10,10,10), 'B': (38,38,42), 'A': (48,48,52),
-    'L': (44,44,48), 'S': (140,140,150),
 }
 
 def sprite(d, rows, cx, cy, block):
@@ -52,6 +24,17 @@ def sprite(d, rows, cx, cy, block):
         for i, ch in enumerate(row):
             if ch in COLORS:
                 d.rectangle([x0 + i*block, y0 + j*block, x0 + (i+1)*block - 1, y0 + (j+1)*block - 1], COLORS[ch])
+
+MOBS = Path(__file__).with_name('mobs')
+
+def mob(base, name, x, y, scale, anchor='center'):
+    """Paste a mob sprite; whole-number scales stay pixel-crisp, fractional ones are smoothed."""
+    im = Image.open(MOBS / f'{name}.png').convert('RGBA')
+    size = (max(1, round(im.width * scale)), max(1, round(im.height * scale)))
+    whole = abs(scale - round(scale)) < 1e-6
+    im = im.resize(size, Image.NEAREST if whole else Image.LANCZOS)
+    top = y - im.height if anchor == 'bottom' else y - im.height / 2
+    base.paste(im, (round(x - im.width / 2), round(top)), im)
 
 def glow(base, pts, f, color=(255,140,30), radius=26, strength=.8):
     W, H = base.size
@@ -118,13 +101,14 @@ def scene(base):
         b = round(k * f)
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b)
 
-    # wither skeletons on the battlements, a ghast in the haze, bats across the sky
-    for x, y in ((326,226), (690,220)):
-        sprite(d, WITHER, x*f, y*f, round(3*f))
-    sprite(d, GHAST, 664*f, 196*f, round(3*f))
-    for x, y, s in ((300,190,3), (352,206,2), (448,204,3), (500,236,2), (580,176,2),
-                    (430,14,2), (560,10,3), (700,22,2), (905,140,2), (250,212,2)):
-        sprite(d, BAT, x*f, y*f, round(s*f))
+    # mobs built from Minecraft's own textures (see mobs/README.md): wither skeletons standing on
+    # the battlements (x, wall top y), a ghast in the haze, bats across the sky (x, y, scale)
+    for x, y in ((326,241), (690,236)):
+        mob(base, 'wither_skeleton', x*f, y*f, f, anchor='bottom')
+    mob(base, 'ghast', 664*f, 196*f, 1.5*f)
+    for x, y, s in ((300,190,.75), (352,206,.5), (448,204,.75), (500,236,.5), (580,176,.5),
+                    (430,14,.5), (560,10,.75), (700,22,.5), (905,140,.5), (250,212,.5)):
+        mob(base, 'bat', x*f, y*f, s*f)
     return base
 
 def logo_halo(base, im, pos, pad, W):
