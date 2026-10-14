@@ -263,7 +263,7 @@ def main():
             if args.logo:
                 overlay(args.logo, round(W * .66), top=round(H * .06))
             if args.tagline:
-                overlay(args.tagline, round(W * .8), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
+                overlay(args.tagline, round(W * .94), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
             base.save(out, optimize=True)
         else:
             text.save(out, optimize=True)
