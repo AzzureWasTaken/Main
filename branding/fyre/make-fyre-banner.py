@@ -269,9 +269,7 @@ def main():
                 base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), halo)
                 base.paste(im, pos, im)
             if args.logo:
-                box = overlay(args.logo, round(W * .66), top=round(H * .06), spooky=args.halloween)
-                if args.halloween:
-                    halloween.cobwebs(base, box)
+                overlay(args.logo, round(W * .66), top=round(H * .06), spooky=args.halloween)
             if args.tagline:
                 overlay(args.tagline, round(W * .94), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
             base.save(out, optimize=True)

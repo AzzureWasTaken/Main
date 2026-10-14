@@ -1,20 +1,57 @@
 <title>Fyre Banner Board</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: the two banners stacked on dark Nether stone, nothing else. Deliberately single dark theme. */
-:root { --bg: #170b0b; --line: #3d1d1a; color-scheme: dark; }
-body { background: var(--bg); }
+/* Layout: the two banners stacked on dark Nether stone, each with its download button. Deliberately single dark theme. */
+:root { --bg: #170b0b; --line: #3d1d1a; --gold: #e9a63a; --ink: #1a0a05; color-scheme: dark; }
+body { background: var(--bg); font: 14px/1.4 system-ui, sans-serif; }
 main {
   max-width: 1000px; margin: 0 auto;
   padding-block: 32px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 24px;
+  display: grid; gap: 28px;
 }
+figure { margin: 0; display: grid; gap: 10px; justify-items: end; }
 img { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); }
+button {
+  font: 600 14px/1 system-ui, sans-serif; color: var(--ink); background: var(--gold);
+  border: 0; padding: 10px 16px; cursor: pointer;
+}
+button:hover { filter: brightness(1.1); }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+button:disabled { opacity: .6; cursor: default; }
 </style>
 
 <main>
-  <img src="fyre-banner-1920x1080.png" width="1920" height="1080" alt="Fyre banner: gold FYRE.CC logo over a Nether fortress canyon, Daily PVP Events / Tournaments below">
-  <img src="fyre-banner-halloween-1920x1080.png" width="1920" height="1080" alt="Fyre Halloween banner: the same scene with a full moon, jack-o'-lanterns, bats, a ghast, wither skeletons, purple mist and cobwebs on the logo">
+  <figure>
+    <img src="fyre-banner-1920x1080.png" width="1920" height="1080" alt="Fyre banner: gold FYRE.CC logo over a Nether fortress canyon, Daily PVP Events / Tournaments below">
+    <button type="button" id="dl-normal" data-file="fyre-banner-1920x1080.png" hidden>Download</button>
+  </figure>
+  <figure>
+    <img src="fyre-banner-halloween-1920x1080.png" width="1920" height="1080" alt="Fyre Halloween banner: blood moon behind the castle, jack-o'-lanterns on the ledges, bats, a ghast, wither skeletons and purple mist">
+    <button type="button" id="dl-halloween" data-file="fyre-banner-halloween-1920x1080.png" hidden>Download</button>
+  </figure>
 </main>
+
+<script>
+(async () => {
+  const downloads = await window.claude?.use?.("downloads");
+  if (!downloads) return;  // this view can't save files: leave the buttons hidden
+  for (const btn of document.querySelectorAll("button[data-file]")) {
+    btn.hidden = false;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        const blob = await (await fetch(btn.dataset.file)).blob();
+        await downloads.save({ filename: btn.dataset.file, data: blob });
+      } catch (e) {
+        if (e && ["unavailable", "not_granted", "capability_disabled", "capability_removed"].includes(e.code)) {
+          document.querySelectorAll("button[data-file]").forEach(b => b.hidden = true);
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+})();
+</script>

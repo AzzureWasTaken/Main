@@ -1,4 +1,4 @@
-"""Halloween layer for the Fyre banner: moon, mist, jack-o'-lanterns, mobs, cobwebs.
+"""Halloween layer for the Fyre banner: moon, mist, jack-o'-lanterns, mobs, logo glow.
 
 Every position is in 960x540 space and scaled by f = W/960, so both output
 sizes line up. Positions are tied to fyre-background.webp at --bg-top 0.2.
@@ -69,21 +69,24 @@ def scene(base):
     f = W / 960
     rng = random.Random(31)
 
-    # moon behind the castle: painted only where the pixel is bright sky, so towers stay in front
-    mx, my, mr = 470*f, 222*f, 46*f
-    moon = Image.new('RGB', (W, H), (255,238,206))
-    md = ImageDraw.Draw(moon)
-    for cx, cy, r in ((-14,-10,9), (12,8,7), (-4,18,5), (16,-18,5)):
-        md.ellipse([mx+cx*f-r*f, my+cy*f-r*f, mx+cx*f+r*f, my+cy*f+r*f], (226,206,176))
-    disk = Image.new('L', (W, H))
-    ImageDraw.Draw(disk).ellipse([mx-mr, my-mr, mx+mr, my+mr], 255)
-    disk = disk.filter(ImageFilter.GaussianBlur(1.2*f))
+    # blood moon behind the castle, veiled by smoke; painted only where the pixel is bright sky,
+    # so the towers stay in front
+    mx, my, mr = 470*f, 226*f, 48*f
+    moon = render_moon(W, H, mx, my, mr)
     r, g, b = base.split()
     sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
     sky = ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
     sky = sky.filter(ImageFilter.GaussianBlur(.8*f))
-    base = glow(base, [(470, 222, 2.6)], f, (255,210,170), 30, .45)
-    base = Image.composite(moon, base, ImageChops.multiply(disk, sky))
+    smoke = Image.new('L', (24, 14))
+    smoke.putdata([rng.randrange(256) for _ in range(24*14)])
+    smoke = smoke.resize((W, H), Image.BICUBIC).filter(ImageFilter.GaussianBlur(10*f))
+    veil = smoke.point(lambda v: int(255 - .5 * max(0, v - 90)))
+    mask = ImageChops.multiply(ImageChops.multiply(moon.getchannel('A'), sky), veil)
+    halo = Image.new('L', (W, H))
+    ImageDraw.Draw(halo).ellipse([mx - 1.7*mr, my - 1.7*mr, mx + 1.7*mr, my + 1.7*mr], 110)
+    halo = ImageChops.multiply(halo.filter(ImageFilter.GaussianBlur(28*f)), sky)
+    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (190,70,30)), Image.new('RGB', (W, H)), halo))
+    base = Image.composite(moon.convert('RGB'), base, mask)
 
     # purple and green mist low in the canyon
     W4, H4 = W // 8, H // 8
@@ -103,17 +106,22 @@ def scene(base):
         gd.ellipse([(x-r)*f, (y-r*.45)*f, (x+r)*f, (y+r*.45)*f], 70)
     base = Image.composite(green, base, gmask.filter(ImageFilter.GaussianBlur(26*f)))
 
-    # jack-o'-lanterns: small ones in the tower windows, larger on battlements, biggest on the gate
-    windows = [(388,268), (410,268), (526,272), (548,272), (598,210), (628,210), (218,176), (240,176)]
-    walls = [(302,240), (350,244), (642,234), (738,232), (880,208), (812,100)]
-    gate = (470,312)
-    base = glow(base, [(x, y, .55) for x, y in windows] + [(x, y, .8) for x, y in walls] + [(*gate, 1.4)], f)
+    # jack-o'-lanterns sitting on real ledges and wall tops: (x, surface y, block size).
+    # Surface heights were read off fyre-background.webp at --bg-top 0.2.
+    lanterns = [
+        (370, 275, 2), (436, 275, 2),          # ledge under the left centre tower's windows
+        (500, 282, 2), (563, 282, 2),          # ledge under the right centre tower's windows
+        (580, 220, 2), (637, 220, 2),          # ledge on the tall right tower
+        (230, 184, 2), (262, 184, 2),          # ledge under the left tower's windows
+        (300, 244, 2), (340, 244, 2),          # left wall top
+        (900, 212, 2),                         # far right wall
+        (470, 313, 3),                         # gate wall, centre
+    ]
+    base = glow(base, [(x, y - 6, .45 * k) for x, y, k in lanterns], f)
     d = ImageDraw.Draw(base)
-    for x, y in windows:
-        sprite(d, PUMPKIN, x*f, y*f, round(2*f))
-    for x, y in walls:
-        sprite(d, PUMPKIN, x*f, (y-4)*f, round(3*f))
-    sprite(d, PUMPKIN, gate[0]*f, gate[1]*f, round(5*f))
+    for x, y, k in lanterns:
+        b = round(k * f)
+        sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b)
 
     # wither skeletons on the battlements, a ghast in the haze, bats across the sky
     for x, y in ((326,226), (690,220)):
@@ -133,40 +141,37 @@ def logo_halo(base, im, pos, pad, W):
     tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
     base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), tight.point(lambda v: int(v * .9)))
 
-def cobwebs(base, box):
-    """Cobwebs hanging off the logo's top-left and top-right corners."""
-    W = base.size[0]
-    f = W / 960
-    x0, y0, x1, y1 = box
-    layer = Image.new('RGBA', base.size)
-    d = ImageDraw.Draw(layer)
-    lw = max(1, round(1.2*f))
-    col = (240,236,230,190)
-    for cx, sx in ((x0 - 6*f, 1), (x1 + 6*f, -1)):
-        cy = y0 - 6*f
-        R = 70*f
-        angles = [math.radians(a) for a in (4, 26, 48, 70, 88)]
-        spokes = [(cx + sx*R*math.cos(a), cy + R*math.sin(a)) for a in angles]
-        for p in spokes:
-            d.line([(cx, cy), p], col, lw)
-        for k in range(1, 5):
-            t = k / 4.6
-            ring = [(cx + (px-cx)*t, cy + (py-cy)*t) for px, py in spokes]
-            for a, b in zip(ring, ring[1:]):
-                mid = ((a[0]+b[0])/2 + sx*2.5*f*t, (a[1]+b[1])/2 - 2.5*f*t)
-                d.line([a, mid, b], col, lw)
-        # a spider dropping on a thread
-        sx0, sy0 = cx + sx*40*f, cy + 40*f
-        d.line([(sx0, sy0), (sx0, sy0 + 30*f)], col, lw)
-        sprite_spider(d, sx0, sy0 + 34*f, f)
-    base.paste(layer, (0, 0), layer)
+def render_moon(W, H, mx, my, mr):
+    """A hazy blood moon: warm limb-darkened disk, faint low-contrast seas, no outlines."""
+    S = int(mr * 2) + 2
+    r = random.Random(5)
+    small = Image.new('L', (12, 12))
+    small.putdata([r.randrange(256) for _ in range(144)])
+    tex = small.resize((S, S), Image.BICUBIC).filter(ImageFilter.GaussianBlur(S * .03)).load()
+    maria = Image.new('L', (S, S))
+    md = ImageDraw.Draw(maria)
+    for cx, cy, rx, ry in ((.36,.34,.18,.14), (.56,.30,.13,.12), (.62,.50,.15,.11),
+                           (.40,.60,.10,.08), (.28,.48,.08,.07)):
+        md.ellipse([(cx-rx)*S, (cy-ry)*S, (cx+rx)*S, (cy+ry)*S], 255)
+    maria = maria.filter(ImageFilter.GaussianBlur(S * .06)).load()
+    img = Image.new('RGBA', (S, S))
+    px = img.load()
+    c = S / 2
+    for y in range(S):
+        for x in range(S):
+            dx, dy = (x - c) / mr, (y - c) / mr
+            d = math.sqrt(dx*dx + dy*dy)
+            if d > 1:
+                continue
+            z = math.sqrt(1 - d*d)
+            t = .5 + .5 * z ** .7
+            col = lerp3((196,64,36), (255,168,104), t)                 # deep red rim to amber centre
+            k = (1 - .16 * maria[x, y] / 255) * (.95 + .1 * (tex[x, y] / 255 - .5))
+            alpha = int(255 * min(1, (1 - d) * 18))                    # soft anti-aliased edge
+            px[x, y] = tuple(min(255, int(ch * k)) for ch in col) + (alpha,)
+    full = Image.new('RGBA', (W, H))
+    full.paste(img, (int(mx - c), int(my - c)))
+    return full
 
-def sprite_spider(d, x, y, f):
-    b = max(1, round(2*f))
-    body = (24,10,16)
-    d.rectangle([x - 2*b, y - 2*b, x + 2*b, y + 2*b], body)
-    d.rectangle([x - b, y - b, x - b + b//2, y - b + b//2], (220,30,30))
-    d.rectangle([x + b//2, y - b, x + b, y - b + b//2], (220,30,30))
-    for k in (-1, 0, 1):
-        d.line([(x - 2*b, y + k*b), (x - 4*b, y + k*b + b)], body, max(1, b//2))
-        d.line([(x + 2*b, y + k*b), (x + 4*b, y + k*b + b)], body, max(1, b//2))
+def lerp3(a, b, t):
+    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
