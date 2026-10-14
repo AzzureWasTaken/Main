@@ -69,24 +69,19 @@ def scene(base):
     f = W / 960
     rng = random.Random(31)
 
-    # blood moon behind the castle, veiled by smoke; painted only where the pixel is bright sky,
-    # so the towers stay in front
-    mx, my, mr = 470*f, 226*f, 48*f
-    moon = render_moon(W, H, mx, my, mr)
+    # the Minecraft moon behind the castle with a soft round glow; painted only where the
+    # pixel is bright sky, so the towers stay in front
+    mx, my, size = 470*f, 226*f, 40*f
     r, g, b = base.split()
     sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
     sky = ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
-    sky = sky.filter(ImageFilter.GaussianBlur(.8*f))
-    smoke = Image.new('L', (24, 14))
-    smoke.putdata([rng.randrange(256) for _ in range(24*14)])
-    smoke = smoke.resize((W, H), Image.BICUBIC).filter(ImageFilter.GaussianBlur(10*f))
-    veil = smoke.point(lambda v: int(255 - .5 * max(0, v - 90)))
-    mask = ImageChops.multiply(ImageChops.multiply(moon.getchannel('A'), sky), veil)
     halo = Image.new('L', (W, H))
-    ImageDraw.Draw(halo).ellipse([mx - 1.7*mr, my - 1.7*mr, mx + 1.7*mr, my + 1.7*mr], 110)
-    halo = ImageChops.multiply(halo.filter(ImageFilter.GaussianBlur(28*f)), sky)
-    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (190,70,30)), Image.new('RGB', (W, H)), halo))
-    base = Image.composite(moon.convert('RGB'), base, mask)
+    R = size * 1.9
+    ImageDraw.Draw(halo).ellipse([mx - R, my - R, mx + R, my + R], 210)
+    halo = ImageChops.multiply(halo.filter(ImageFilter.GaussianBlur(size * .55)), sky.filter(ImageFilter.GaussianBlur(2*f)))
+    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (235,225,205)), Image.new('RGB', (W, H)), halo))
+    moon = render_moon(W, H, mx, my, size)
+    base = Image.composite(moon.convert('RGB'), base, ImageChops.multiply(moon.getchannel('A'), sky))
 
     # purple and green mist low in the canyon
     W4, H4 = W // 8, H // 8
@@ -141,37 +136,25 @@ def logo_halo(base, im, pos, pad, W):
     tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
     base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), tight.point(lambda v: int(v * .9)))
 
-def render_moon(W, H, mx, my, mr):
-    """A hazy blood moon: warm limb-darkened disk, faint low-contrast seas, no outlines."""
-    S = int(mr * 2) + 2
-    r = random.Random(5)
-    small = Image.new('L', (12, 12))
-    small.putdata([r.randrange(256) for _ in range(144)])
-    tex = small.resize((S, S), Image.BICUBIC).filter(ImageFilter.GaussianBlur(S * .03)).load()
-    maria = Image.new('L', (S, S))
-    md = ImageDraw.Draw(maria)
-    for cx, cy, rx, ry in ((.36,.34,.18,.14), (.56,.30,.13,.12), (.62,.50,.15,.11),
-                           (.40,.60,.10,.08), (.28,.48,.08,.07)):
-        md.ellipse([(cx-rx)*S, (cy-ry)*S, (cx+rx)*S, (cy+ry)*S], 255)
-    maria = maria.filter(ImageFilter.GaussianBlur(S * .06)).load()
-    img = Image.new('RGBA', (S, S))
-    px = img.load()
-    c = S / 2
-    for y in range(S):
-        for x in range(S):
-            dx, dy = (x - c) / mr, (y - c) / mr
-            d = math.sqrt(dx*dx + dy*dy)
-            if d > 1:
-                continue
-            z = math.sqrt(1 - d*d)
-            t = .5 + .5 * z ** .7
-            col = lerp3((196,64,36), (255,168,104), t)                 # deep red rim to amber centre
-            k = (1 - .16 * maria[x, y] / 255) * (.95 + .1 * (tex[x, y] / 255 - .5))
-            alpha = int(255 * min(1, (1 - d) * 18))                    # soft anti-aliased edge
-            px[x, y] = tuple(min(255, int(ch * k)) for ch in col) + (alpha,)
-    full = Image.new('RGBA', (W, H))
-    full.paste(img, (int(mx - c), int(my - c)))
-    return full
+# The Minecraft full moon, 8x8: pale face, grey craters, darker right edge and base.
+MOON = ["LLLLLLMM",
+        "LDDLLLMM",
+        "LDLDLWMM",
+        "LDDDLLMD",
+        "LLLDLLMM",
+        "WLDDLLLM",
+        "LLLLLLMM",
+        "MMMMDMMD"]
+MOON_COLORS = {'L': (224,224,228), 'W': (246,246,250), 'M': (172,172,180), 'D': (124,124,134)}
 
-def lerp3(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+def render_moon(W, H, mx, my, size):
+    """The square Minecraft moon, crisp block pixels, as an RGBA layer."""
+    full = Image.new('RGBA', (W, H))
+    d = ImageDraw.Draw(full)
+    b = size / 8
+    x0, y0 = mx - size/2, my - size/2
+    for j, row in enumerate(MOON):
+        for i, ch in enumerate(row):
+            d.rectangle([round(x0 + i*b), round(y0 + j*b), round(x0 + (i+1)*b) - 1, round(y0 + (j+1)*b) - 1],
+                        MOON_COLORS[ch] + (255,))
+    return full
