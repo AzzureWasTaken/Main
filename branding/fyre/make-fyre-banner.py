@@ -6,10 +6,10 @@ the Discord server-banner sizes. Text stays in the centre, which Discord
 never crops. With --bg, the pixel text goes over a 16:9 crop of that image
 instead of the drawn scene.
 
-    python3 make-fyre-banner.py [--bg fyre-background.webp] [--sub "PVP TOURNAMENTS" --sub2 "AND MORE"]
+    python3 make-fyre-banner.py [--bg fyre-background.webp] [--logo fyre-logo.png] [--sub "PVP TOURNAMENTS" --sub2 "AND MORE"]
 """
 import argparse, math, random
-from PIL import Image
+from PIL import Image, ImageFilter
 
 FONT = {  # 5x7 pixel glyphs
  'A':["01110","10001","10001","11111","10001","10001","10001"],
@@ -82,6 +82,7 @@ def main():
     ap.add_argument('--sub2', default='AND MORE')
     ap.add_argument('--out', default='fyre-banner')
     ap.add_argument('--bg', help='background image; omit to draw the pixel scene')
+    ap.add_argument('--logo', help='logo image to use in place of the pixel FYRE title')
     ap.add_argument('--bg-top', type=float, default=.2, help='where the 16:9 crop starts, as a fraction of the image height')
     args = ap.parse_args()
     rng = random.Random(11)
@@ -201,7 +202,8 @@ def main():
 
     # title in the sky gap; with a photo, tagline drops to the bottom strip
     title_s, title_y, sub_y = (6, 10, 101) if args.bg else (7, 22, 79)
-    draw_text('FYRE', title_s, title_y, (255,242,130), (232,60,8), (40,8,8), shadow=3, glint=False)
+    if not args.logo:
+        draw_text('FYRE', title_s, title_y, (255,242,130), (232,60,8), (40,8,8), shadow=3, glint=False)
     draw_text(args.sub, 2, sub_y, (255,255,255), (255,196,90), (30,6,8))
     sx, sw = draw_text(args.sub2, 1, sub_y+18, (255,226,150), (255,170,60), (30,6,8), shadow=1)
 
@@ -241,6 +243,20 @@ def main():
                     sp[x, y] = int(190 * min(1, t*1.4))
             base = Image.composite(Image.new('RGB', (W, H), (14,3,4)), base, shade)
             base.paste(text, (0, 0), text)
+            if args.logo:
+                logo = Image.open(args.logo).convert('RGBA')
+                logo = logo.crop(logo.getchannel('A').getbbox())
+                lw = round(W * .66)
+                logo = logo.resize((lw, round(logo.height * lw / logo.width)), Image.LANCZOS)
+                pos = ((W - lw)//2, round(H * .06))
+                # soft dark halo so the gold separates from the orange sky
+                pad = W // 20
+                halo = Image.new('L', (logo.width + 2*pad, logo.height + 2*pad))
+                halo.paste(logo.getchannel('A'), (pad, pad))
+                halo = halo.filter(ImageFilter.MaxFilter(2*(W//240)+1)).filter(ImageFilter.GaussianBlur(W/80))
+                halo = halo.point(lambda v: int(v * .85))
+                base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), halo)
+                base.paste(logo, pos, logo)
             base.save(out, optimize=True)
         else:
             text.save(out, optimize=True)
