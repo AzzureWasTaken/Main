@@ -175,6 +175,8 @@ def render_moon(W, H, mx, my, size):
     d = ImageDraw.Draw(full)
     b = size / 8
     x0, y0 = mx - size/2, my - size/2
+    o = max(2, round(size / 24))  # thin dark outline so the disc separates from the sky
+    d.rectangle([round(x0) - o, round(y0) - o, round(x0 + size) - 1 + o, round(y0 + size) - 1 + o], (44,4,8,255))
     for j, row in enumerate(MOON):
         for i, ch in enumerate(row):
             d.rectangle([round(x0 + i*b), round(y0 + j*b), round(x0 + (i+1)*b) - 1, round(y0 + (j+1)*b) - 1],
