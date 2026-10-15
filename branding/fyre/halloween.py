@@ -17,9 +17,15 @@ COLORS = {
     'g': (70,120,30), 'O': (232,120,18), 'o': (176,78,10), 'Y': (255,232,96),
 }
 
-def sprite(d, rows, cx, cy, block):
+def sprite(d, rows, cx, cy, block, outline=0, outline_color=(44,4,8)):
     w, h = len(rows[0]) * block, len(rows) * block
     x0, y0 = round(cx - w/2), round(cy - h/2)
+    if outline:  # dilate every filled cell by `outline` px in a dark colour, then draw the fills over it
+        for j, row in enumerate(rows):
+            for i, ch in enumerate(row):
+                if ch in COLORS:
+                    d.rectangle([x0 + i*block - outline, y0 + j*block - outline,
+                                 x0 + (i+1)*block - 1 + outline, y0 + (j+1)*block - 1 + outline], outline_color)
     for j, row in enumerate(rows):
         for i, ch in enumerate(row):
             if ch in COLORS:
@@ -120,20 +126,21 @@ def scene(base):
     # Surface heights were read off fyre-background.webp at --bg-top 0.2.
     lanterns = [
         (35, 162, 2), (140, 162, 2),           # long ledge on the far-left castle
-        (230, 184, 2), (262, 184, 2),          # ledge under the left tower's windows
+        (230, 184, 2),                         # ledge under the left tower's windows
         (295, 244, 2),                         # left wall top
-        (370, 275, 2), (436, 275, 2),          # ledge under the left centre tower's windows
+        (385, 275, 2),                         # ledge under the left centre tower's windows
         (470, 313, 3),                         # gate wall, centre
-        (500, 282, 2), (563, 282, 2),          # ledge under the right centre tower's windows
-        (580, 220, 2), (637, 220, 2),          # ledge on the tall right tower
-        (772, 300, 2), (812, 300, 2),          # base of the big right tower
+        (545, 282, 2),                         # ledge under the right centre tower's windows
+        (610, 220, 2),                         # ledge on the tall right tower
+        (662, 252, 2), (726, 235, 2),          # right-hand wall top
+        (772, 300, 2),                         # base of the big right tower
         (866, 214, 2),                         # far right wall
     ]
     base = glow(base, [(x, y - 6, .45 * k) for x, y, k in lanterns], f)
     d = ImageDraw.Draw(base)
     for x, y, k in lanterns:
         b = round(k * f)
-        sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b)
+        sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
 
     # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
     # wither skeletons standing behind battlements or on a ledge, the ghast in the lava-lit top corner,
