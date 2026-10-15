@@ -137,8 +137,8 @@ def scene(base):
         mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
     mob(base, 'ghast', 895*f, 75*f, 1.5*f)
-    for x, y, s in ((50,95,.5), (215,18,.75), (400,10,.5), (610,22,.75), (770,12,.5),
-                    (945,135,.5), (345,200,.75), (425,232,.5), (535,198,.5), (690,192,.75)):
+    for x, y, s in ((50,95,.8), (215,20,1.2), (400,12,.8), (610,24,1.2), (770,14,.8),
+                    (940,135,.8), (345,200,1.2), (420,236,.8), (540,196,.8), (690,192,1.2)):
         mob(base, 'bat', x*f, y*f, s*f)
     return base
 
