@@ -27,7 +27,13 @@ def sprite(d, rows, cx, cy, block):
 
 MOBS = Path(__file__).with_name('mobs')
 
-def mob(base, name, x, y, scale, anchor='center', rim=False):
+def sky_mask(base):
+    """255 where the background is bright open sky, 0 over stone."""
+    r, g, b = base.split()
+    sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
+    return ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
+
+def mob(base, name, x, y, scale, anchor='center', rim=False, behind=None, shadow=False):
     """Paste a mob sprite; whole-number scales stay pixel-crisp, fractional ones are smoothed."""
     im = Image.open(MOBS / f'{name}.png').convert('RGBA')
     size = (max(1, round(im.width * scale)), max(1, round(im.height * scale)))
@@ -35,6 +41,19 @@ def mob(base, name, x, y, scale, anchor='center', rim=False):
     im = im.resize(size, Image.NEAREST if whole else Image.LANCZOS)
     top = y - im.height if anchor == 'bottom' else y - im.height / 2
     pos = (round(x - im.width / 2), round(top))
+    if behind is not None:
+        # standing behind a parapet: below its top line, stone stays in front of the mob
+        sky = sky_mask(base).crop((pos[0], pos[1], pos[0] + im.width, pos[1] + im.height))
+        keep = Image.new('L', im.size, 255)
+        cut = max(0, round(behind - pos[1]))
+        keep.paste(sky.crop((0, cut, im.width, im.height)).point(lambda v: 255 if v > 120 else 0), (0, cut))
+        im.putalpha(ImageChops.multiply(im.getchannel('A'), keep))
+    if shadow:
+        # soft contact shadow where the feet meet the ledge
+        sh = Image.new('L', base.size)
+        w = im.width * .55
+        ImageDraw.Draw(sh).ellipse([x - w, y - 2*scale, x + w, y + 2*scale], 170)
+        base.paste((8,2,3), (0, 0), sh.filter(ImageFilter.GaussianBlur(1.2*scale)))
     if rim:  # faint orange rim light so dark mobs read against dark stone
         pad = max(2, round(4 * scale))
         a = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
@@ -111,10 +130,12 @@ def scene(base):
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b)
 
     # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
-    # wither skeletons standing on ledges (x, surface y), the ghast in the lava-lit top corner,
+    # wither skeletons standing behind battlements or on a ledge, the ghast in the lava-lit top corner,
     # bats in the bright sky bands (x, y, scale)
-    for x, y in ((75, 162), (330, 244), (608, 220), (905, 213)):
-        mob(base, 'wither_skeleton', x*f, y*f, f, anchor='bottom', rim=True)
+    # (x, feet y, parapet top y or None for an open ledge)
+    for x, y, wall in ((80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)):
+        mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
+            behind=wall*f if wall else None, shadow=wall is None)
     mob(base, 'ghast', 895*f, 75*f, 1.5*f)
     for x, y, s in ((50,95,.5), (215,18,.75), (400,10,.5), (610,22,.75), (770,12,.5),
                     (945,135,.5), (345,200,.75), (425,232,.5), (535,198,.5), (690,192,.75)):
@@ -130,15 +151,15 @@ def logo_halo(base, im, pos, pad, W):
     tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
     base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), tight.point(lambda v: int(v * .9)))
 
-# The Minecraft full moon, 8x8: pale face, grey craters, darker right edge and base.
-MOON = ["LLLLLLMM",
-        "LDDLLLMM",
-        "LDLDLWMM",
-        "LDDDLLMD",
-        "LLLDLLMM",
-        "WLDDLLLM",
+# The Minecraft full moon, 8x8: pale face with a shaded right edge.
+MOON = ["LLLLLLLM",
+        "LWLLLLMM",
+        "LLLLLLLM",
+        "LLLWLLLM",
         "LLLLLLMM",
-        "MMMMDMMD"]
+        "LWLLLLLM",
+        "LLLLLLMM",
+        "MLLLLLMM"]
 MOON_COLORS = {'L': (224,224,228), 'W': (246,246,250), 'M': (172,172,180), 'D': (124,124,134)}
 
 def render_moon(W, H, mx, my, size):
