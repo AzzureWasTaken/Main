@@ -148,10 +148,13 @@ def scene(base):
     for x, y, wall in ((80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)):
         mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
-    mob(base, 'ghast', 905*f, 285*f, 1.5*f)
-    # two loose rows: the lava-lit strip above the logo and the open sky below it, plus the far edges.
-    for x, y, s in ((150,22,.8), (290,10,1.2), (430,26,.8), (570,10,1.2), (705,26,.8), (850,12,1.2),
-                    (50,95,.8), (265,198,1.0), (355,214,1.2), (560,190,.8), (690,200,1.2), (940,135,.8)):
+    # the ghast shooting a fireball: open mouth, with the fireball flying out toward the castle
+    mob(base, 'ghast_shooting', 915*f, 288*f, 1.9*f)
+    mob(base, 'fireball', 876*f, 300*f, 1.7*f)
+    # bats spread over the whole canvas (x, y, scale): top strip, edges, below the logo, canyon, bottom
+    for x, y, s in ((90,32,.8), (335,14,1.2), (560,16,.8), (815,34,1.2), (50,96,.8), (940,150,.8),
+                    (255,200,1.2), (650,196,1.2), (330,300,1.2), (610,318,.8), (205,360,1.2),
+                    (740,365,.8), (140,505,1.2), (500,503,.8), (830,505,1.2)):
         mob(base, 'bat', x*f, y*f, s*f)
     return base
 
