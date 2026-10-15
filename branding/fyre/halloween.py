@@ -136,7 +136,6 @@ def scene(base):
         (772, 300, 2),                         # base of the big right tower
         (866, 214, 2),                         # far right wall
     ]
-    base = glow(base, [(x, y - 6, .45 * k) for x, y, k in lanterns], f)
     d = ImageDraw.Draw(base)
     for x, y, k in lanterns:
         b = round(k * f)
