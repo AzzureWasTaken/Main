@@ -27,14 +27,21 @@ def sprite(d, rows, cx, cy, block):
 
 MOBS = Path(__file__).with_name('mobs')
 
-def mob(base, name, x, y, scale, anchor='center'):
+def mob(base, name, x, y, scale, anchor='center', rim=False):
     """Paste a mob sprite; whole-number scales stay pixel-crisp, fractional ones are smoothed."""
     im = Image.open(MOBS / f'{name}.png').convert('RGBA')
     size = (max(1, round(im.width * scale)), max(1, round(im.height * scale)))
     whole = abs(scale - round(scale)) < 1e-6
     im = im.resize(size, Image.NEAREST if whole else Image.LANCZOS)
     top = y - im.height if anchor == 'bottom' else y - im.height / 2
-    base.paste(im, (round(x - im.width / 2), round(top)), im)
+    pos = (round(x - im.width / 2), round(top))
+    if rim:  # faint orange rim light so dark mobs read against dark stone
+        pad = max(2, round(4 * scale))
+        a = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
+        a.paste(im.getchannel('A'), (pad, pad))
+        a = a.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.5 * scale))
+        base.paste((255,130,40), (pos[0] - pad, pos[1] - pad), a.point(lambda v: int(v * .55)))
+    base.paste(im, pos, im)
 
 def glow(base, pts, f, color=(255,140,30), radius=26, strength=.8):
     W, H = base.size
@@ -87,13 +94,15 @@ def scene(base):
     # jack-o'-lanterns sitting on real ledges and wall tops: (x, surface y, block size).
     # Surface heights were read off fyre-background.webp at --bg-top 0.2.
     lanterns = [
+        (35, 162, 2), (140, 162, 2),           # long ledge on the far-left castle
+        (230, 184, 2), (262, 184, 2),          # ledge under the left tower's windows
+        (295, 244, 2),                         # left wall top
         (370, 275, 2), (436, 275, 2),          # ledge under the left centre tower's windows
+        (470, 313, 3),                         # gate wall, centre
         (500, 282, 2), (563, 282, 2),          # ledge under the right centre tower's windows
         (580, 220, 2), (637, 220, 2),          # ledge on the tall right tower
-        (230, 184, 2), (262, 184, 2),          # ledge under the left tower's windows
-        (300, 244, 2), (340, 244, 2),          # left wall top
-        (900, 212, 2),                         # far right wall
-        (470, 313, 3),                         # gate wall, centre
+        (772, 300, 2), (812, 300, 2),          # base of the big right tower
+        (866, 214, 2),                         # far right wall
     ]
     base = glow(base, [(x, y - 6, .45 * k) for x, y, k in lanterns], f)
     d = ImageDraw.Draw(base)
@@ -101,13 +110,14 @@ def scene(base):
         b = round(k * f)
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b)
 
-    # mobs built from Minecraft's own textures (see mobs/README.md): wither skeletons standing on
-    # the battlements (x, wall top y), a ghast in the haze, bats across the sky (x, y, scale)
-    for x, y in ((326,241), (690,236)):
-        mob(base, 'wither_skeleton', x*f, y*f, f, anchor='bottom')
-    mob(base, 'ghast', 664*f, 196*f, 1.5*f)
-    for x, y, s in ((300,190,.75), (352,206,.5), (448,204,.75), (500,236,.5), (580,176,.5),
-                    (430,14,.5), (560,10,.75), (700,22,.5), (905,140,.5), (250,212,.5)):
+    # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
+    # wither skeletons standing on ledges (x, surface y), the ghast in the lava-lit top corner,
+    # bats in the bright sky bands (x, y, scale)
+    for x, y in ((75, 162), (330, 244), (608, 220), (905, 213)):
+        mob(base, 'wither_skeleton', x*f, y*f, f, anchor='bottom', rim=True)
+    mob(base, 'ghast', 895*f, 75*f, 1.5*f)
+    for x, y, s in ((50,95,.5), (215,18,.75), (400,10,.5), (610,22,.75), (770,12,.5),
+                    (945,135,.5), (345,200,.75), (425,232,.5), (535,198,.5), (690,192,.75)):
         mob(base, 'bat', x*f, y*f, s*f)
     return base
 
