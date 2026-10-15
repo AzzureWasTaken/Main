@@ -84,11 +84,17 @@ def scene(base):
     r, g, b = base.split()
     sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
     sky = ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
-    halo = Image.new('L', (W, H))
-    R = size * 1.9
-    ImageDraw.Draw(halo).ellipse([mx - R, my - R, mx + R, my + R], 210)
-    halo = ImageChops.multiply(halo.filter(ImageFilter.GaussianBlur(size * .55)), sky.filter(ImageFilter.GaussianBlur(2*f)))
-    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (235,225,205)), Image.new('RGB', (W, H)), halo))
+    # deep maroon veil around the moon so the red disc stands out, then a tight red glow at its rim
+    veil = Image.new('L', (W, H))
+    R = size * 2.4
+    ImageDraw.Draw(veil).ellipse([mx - R, my - R, mx + R, my + R], 190)
+    veil = ImageChops.multiply(veil.filter(ImageFilter.GaussianBlur(size * .7)), sky.filter(ImageFilter.GaussianBlur(2*f)))
+    base = Image.composite(Image.new('RGB', (W, H), (74,8,12)), base, veil)
+    rim = Image.new('L', (W, H))
+    R = size * .8
+    ImageDraw.Draw(rim).ellipse([mx - R, my - R, mx + R, my + R], 255)
+    rim = ImageChops.multiply(rim.filter(ImageFilter.GaussianBlur(size * .28)), sky.filter(ImageFilter.GaussianBlur(2*f)))
+    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (214,40,28)), Image.new('RGB', (W, H)), rim))
     moon = render_moon(W, H, mx, my, size)
     base = Image.composite(moon.convert('RGB'), base, ImageChops.multiply(moon.getchannel('A'), sky))
 
@@ -137,8 +143,9 @@ def scene(base):
         mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
     mob(base, 'ghast', 895*f, 75*f, 1.5*f)
-    for x, y, s in ((50,95,.8), (215,20,1.2), (400,12,.8), (610,24,1.2), (770,14,.8),
-                    (940,135,.8), (345,200,1.2), (420,236,.8), (540,196,.8), (690,192,1.2)):
+    # two loose rows: the lava-lit strip above the logo and the open sky below it, plus the far edges.
+    for x, y, s in ((150,22,.8), (290,10,1.2), (430,26,.8), (570,10,1.2), (705,26,.8), (850,12,1.2),
+                    (50,95,.8), (265,198,1.0), (355,214,1.2), (560,190,.8), (690,200,1.2), (940,135,.8)):
         mob(base, 'bat', x*f, y*f, s*f)
     return base
 
@@ -151,7 +158,7 @@ def logo_halo(base, im, pos, pad, W):
     tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
     base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), tight.point(lambda v: int(v * .9)))
 
-# The Minecraft full moon, 8x8: pale face with a shaded right edge.
+# The Minecraft full moon as a blood moon, 8x8: deep red face with a shaded right edge.
 MOON = ["LLLLLLLM",
         "LWLLLLMM",
         "LLLLLLLM",
@@ -160,7 +167,7 @@ MOON = ["LLLLLLLM",
         "LWLLLLLM",
         "LLLLLLMM",
         "MLLLLLMM"]
-MOON_COLORS = {'L': (224,224,228), 'W': (246,246,250), 'M': (172,172,180), 'D': (124,124,134)}
+MOON_COLORS = {'L': (228,44,36), 'W': (255,96,70), 'M': (150,24,28), 'D': (110,16,22)}
 
 def render_moon(W, H, mx, my, size):
     """The square Minecraft moon, crisp block pixels, as an RGBA layer."""
