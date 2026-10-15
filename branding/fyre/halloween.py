@@ -148,11 +148,11 @@ def scene(base, players=False):
         (230, 184, 2),                         # ledge under the left tower's windows
         (295, 244, 2),                         # left wall top
         (385, 275, 2),                         # ledge under the left centre tower's windows
-        *(() if players else ((470, 313, 3),)),  # gate wall, centre (the duel stands there when --players)
+        (470, 313, 3),                         # gate wall, centre
         (545, 282, 2),                         # ledge under the right centre tower's windows
         (610, 220, 2),                         # ledge on the tall right tower
         (662, 252, 2), (726, 235, 2),          # right-hand wall top
-        (772, 300, 2),                         # base of the big right tower
+        *(() if players else ((772, 300, 2),)),  # base of the big right tower (the explorer stands there when --players)
         (866, 214, 2),                         # far right wall
     ]
     d = ImageDraw.Draw(base)
@@ -160,9 +160,10 @@ def scene(base, players=False):
         b = round(k * f)
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
 
-    if players:  # two players sword-fighting on the gate bridge under the moon, one exploring a candle-lit ledge with a torch
-        place_render(base, 'duel', 470, 316, 2.0, f)
-        place_render(base, 'explorer', 288, 399, 1.85, f)
+    if players:  # on the right-hand hill, with the ghast attacking: two players sword-fighting on the big
+        # stone terrace (y~311), one exploring along the step to its left (y~300) with a torch
+        place_render(base, 'duel', 853, 312, 1.4, f)
+        place_render(base, 'explorer', 778, 301, 1.5, f)
 
     # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
     # wither skeletons standing behind battlements or on a ledge, the ghast floating in front of the right-hand hill,
@@ -172,8 +173,9 @@ def scene(base, players=False):
         mob(base, 'wither_skeleton', x*f, y*f, 1.05*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
     # the ghast shooting a fireball: open mouth, with the fireball flying out toward the castle
-    mob(base, 'ghast_shooting', 915*f, 290*f, 2.4*f)
-    mob(base, 'fireball', 874*f, 304*f, 2.0*f)
+    gx, gy, fx, fy = (936, 249, 905, 246) if players else (915, 290, 874, 304)  # moves up-right to give the duel room
+    mob(base, 'ghast_shooting', gx*f, gy*f, 2.4*f)
+    mob(base, 'fireball', fx*f, fy*f, 2.0*f)
     # bats spread over the whole canvas (x, y, scale): top strip, edges, below the logo, canyon, bottom
     for x, y, s in ((90,32,.8), (335,14,1.2), (560,16,.8), (815,34,1.2), (50,96,.8), (940,150,.8),
                     (255,200,1.2), (650,196,1.2), (330,300,1.2), (610,318,.8), (205,360,1.2),
