@@ -142,13 +142,13 @@ def scene(base):
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
 
     # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
-    # wither skeletons standing behind battlements or on a ledge, the ghast in the lava-lit top corner,
+    # wither skeletons standing behind battlements or on a ledge, the ghast floating in front of the right-hand hill,
     # bats in the bright sky bands (x, y, scale)
     # (x, feet y, parapet top y or None for an open ledge)
     for x, y, wall in ((80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)):
         mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
-    mob(base, 'ghast', 895*f, 75*f, 1.5*f)
+    mob(base, 'ghast', 905*f, 285*f, 1.5*f)
     # two loose rows: the lava-lit strip above the logo and the open sky below it, plus the far edges.
     for x, y, s in ((150,22,.8), (290,10,1.2), (430,26,.8), (570,10,1.2), (705,26,.8), (850,12,1.2),
                     (50,95,.8), (265,198,1.0), (355,214,1.2), (560,190,.8), (690,200,1.2), (940,135,.8)):
