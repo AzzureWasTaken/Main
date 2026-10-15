@@ -1,0 +1,13 @@
+import { chromium } from 'playwright-core';
+const out = process.argv[2] || 'render.png';
+const qs = process.argv[3] || '';
+const exe = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const b = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
+const p = await b.newPage({ viewport: { width: +(new URLSearchParams(qs).get('w')||2400), height: +(new URLSearchParams(qs).get('h')||1000) } });
+p.on('console', (m) => console.log('[page]', m.text()));
+p.on('pageerror', (e) => console.log('[error]', e.message));
+await p.goto('http://127.0.0.1:8765/index.html' + qs);
+await p.waitForFunction(() => window.__done === true, null, { timeout: 60000 });
+await p.screenshot({ path: out, omitBackground: true });
+await b.close();
+console.log('saved', out);

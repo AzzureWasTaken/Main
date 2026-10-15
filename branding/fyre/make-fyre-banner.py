@@ -86,6 +86,7 @@ def main():
     ap.add_argument('--logo', help='logo image to use in place of the pixel FYRE title')
     ap.add_argument('--tagline', help='tagline image to use in place of the --sub pixel line')
     ap.add_argument('--halloween', action='store_true', help='add the Halloween layer (halloween.py)')
+    ap.add_argument('--players', action='store_true', help='with --halloween: add the duelling and exploring players')
     ap.add_argument('--bg-top', type=float, default=.2, help='where the 16:9 crop starts, as a fraction of the image height')
     args = ap.parse_args()
     rng = random.Random(11)
@@ -231,7 +232,7 @@ def main():
 
     for scale in (4, 8):
         W, H = GW*scale, GH*scale
-        out = f'{args.out}{"-halloween" if args.halloween else ""}-{W}x{H}.png'
+        out = f'{args.out}{"-halloween" if args.halloween else ""}{"-players" if args.players else ""}-{W}x{H}.png'
         text = img.resize((W, H), Image.NEAREST)
         if args.bg:
             photo = Image.open(args.bg).convert('RGB')
@@ -240,7 +241,7 @@ def main():
             top = min(round(ph * args.bg_top), ph - ch)
             base = photo.crop((0, top, pw, top + ch)).resize((W, H), Image.LANCZOS)
             if args.halloween:
-                base = halloween.scene(base)
+                base = halloween.scene(base, players=args.players)
             # darken the bottom strip so the tagline reads over the lava glow
             shade = Image.new('L', (W, H))
             sp = shade.load()

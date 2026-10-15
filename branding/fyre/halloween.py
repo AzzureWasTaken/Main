@@ -4,6 +4,7 @@ Every position is in 960x540 space and scaled by f = W/960, so both output
 sizes line up. Positions are tied to fyre-background.webp at --bg-top 0.2.
 """
 import math, random
+import numpy as np
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
@@ -32,6 +33,24 @@ def sprite(d, rows, cx, cy, block, outline=0, outline_color=(44,4,8)):
                 d.rectangle([x0 + i*block, y0 + j*block, x0 + (i+1)*block - 1, y0 + (j+1)*block - 1], COLORS[ch])
 
 MOBS = Path(__file__).with_name('mobs')
+PLAYERS = Path(__file__).with_name('players')
+
+def place_render(base, name, x, feet_y, ppu, f, src_ppu=9, ty=26, el=6, tx=0):
+    """Paste a 3D player render (players/<name>.png, see players/README.md) so the point under the
+    subject's origin lands on (x, feet_y). `ppu` is pixels per Minecraft unit at 960 wide."""
+    im = Image.open(PLAYERS / f'{name}.png').convert('RGBA')
+    W0, H0 = im.size
+    ax = W0 / 2 + (0 - tx) * src_ppu
+    ay = H0 / 2 + ty * src_ppu * math.cos(math.radians(el))
+    s = ppu * f / src_ppu
+    a = np.asarray(im).astype(np.float32) / 255
+    a[..., :3] *= a[..., 3:]                                   # premultiply so edges don't darken
+    pm = Image.fromarray((a * 255).round().astype(np.uint8), 'RGBA')
+    pm = pm.resize((round(W0 * s), round(H0 * s)), Image.LANCZOS)
+    b = np.asarray(pm).astype(np.float32) / 255
+    b[..., :3] = np.where(b[..., 3:] > 1e-3, b[..., :3] / np.maximum(b[..., 3:], 1e-3), 0)
+    out = Image.fromarray((np.clip(b, 0, 1) * 255).round().astype(np.uint8), 'RGBA')
+    base.paste(out, (round(x * f - ax * s), round(feet_y * f - ay * s)), out)
 
 def sky_mask(base):
     """255 where the background is bright open sky, 0 over stone."""
@@ -79,7 +98,7 @@ def glow(base, pts, f, color=(255,140,30), radius=26, strength=.8):
     light = Image.new('RGB', (W, H), color)
     return ImageChops.screen(base, Image.composite(light, Image.new('RGB', (W, H)), m))
 
-def scene(base):
+def scene(base, players=False):
     W, H = base.size
     f = W / 960
     rng = random.Random(31)
@@ -129,7 +148,7 @@ def scene(base):
         (230, 184, 2),                         # ledge under the left tower's windows
         (295, 244, 2),                         # left wall top
         (385, 275, 2),                         # ledge under the left centre tower's windows
-        (470, 313, 3),                         # gate wall, centre
+        *(() if players else ((470, 313, 3),)),  # gate wall, centre (the duel stands there when --players)
         (545, 282, 2),                         # ledge under the right centre tower's windows
         (610, 220, 2),                         # ledge on the tall right tower
         (662, 252, 2), (726, 235, 2),          # right-hand wall top
@@ -140,6 +159,10 @@ def scene(base):
     for x, y, k in lanterns:
         b = round(k * f)
         sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
+
+    if players:  # two players sword-fighting on the gate bridge under the moon, one exploring a candle-lit ledge with a torch
+        place_render(base, 'duel', 470, 316, 2.0, f)
+        place_render(base, 'explorer', 288, 399, 1.85, f)
 
     # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
     # wither skeletons standing behind battlements or on a ledge, the ghast floating in front of the right-hand hill,
