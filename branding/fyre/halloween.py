@@ -146,11 +146,11 @@ def scene(base):
     # bats in the bright sky bands (x, y, scale)
     # (x, feet y, parapet top y or None for an open ledge)
     for x, y, wall in ((80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)):
-        mob(base, 'wither_skeleton', x*f, y*f, .8*f, anchor='bottom', rim=True,
+        mob(base, 'wither_skeleton', x*f, y*f, 1.05*f, anchor='bottom', rim=True,
             behind=wall*f if wall else None, shadow=wall is None)
     # the ghast shooting a fireball: open mouth, with the fireball flying out toward the castle
-    mob(base, 'ghast_shooting', 915*f, 288*f, 1.9*f)
-    mob(base, 'fireball', 876*f, 300*f, 1.7*f)
+    mob(base, 'ghast_shooting', 915*f, 290*f, 2.4*f)
+    mob(base, 'fireball', 874*f, 304*f, 2.0*f)
     # bats spread over the whole canvas (x, y, scale): top strip, edges, below the logo, canyon, bottom
     for x, y, s in ((90,32,.8), (335,14,1.2), (560,16,.8), (815,34,1.2), (50,96,.8), (940,150,.8),
                     (255,200,1.2), (650,196,1.2), (330,300,1.2), (610,318,.8), (205,360,1.2),
