@@ -35,7 +35,28 @@ def sprite(d, rows, cx, cy, block, outline=0, outline_color=(44,4,8)):
 MOBS = Path(__file__).with_name('mobs')
 PLAYERS = Path(__file__).with_name('players')
 
-def place_render(base, name, x, feet_y, ppu, f, src_ppu=9, ty=26, el=6, tx=0):
+# ---------------------------------------------------------------------------------------------
+# Everything is built as transparent RGBA layers (see build_layers), so the banner generator and
+# the interactive board (make-board.py, board/) composite exactly the same pieces.
+# ---------------------------------------------------------------------------------------------
+
+def over(layer, src, pos=(0, 0)):
+    """Alpha-composite src (RGBA) onto layer (RGBA) with its top-left at pos, clipping at the edges."""
+    x0, y0 = pos
+    sx0, sy0 = max(0, -x0), max(0, -y0)
+    x1, y1 = min(layer.width, x0 + src.width), min(layer.height, y0 + src.height)
+    if x1 <= max(x0, 0) or y1 <= max(y0, 0):
+        return
+    part = src.crop((sx0, sy0, sx0 + (x1 - max(x0, 0)), sy0 + (y1 - max(y0, 0))))
+    layer.alpha_composite(part, (max(x0, 0), max(y0, 0)))
+
+def over_color(layer, color, pos, mask):
+    """Paint a solid colour through an L mask at pos."""
+    src = Image.new('RGBA', mask.size, tuple(color) + (0,))
+    src.putalpha(mask)
+    over(layer, src, pos)
+
+def place_render(layer, name, x, feet_y, ppu, f, src_ppu=9, ty=26, el=6, tx=0):
     """Paste a 3D player render (players/<name>.png, see players/README.md) so the point under the
     subject's origin lands on (x, feet_y). `ppu` is pixels per Minecraft unit at 960 wide."""
     im = Image.open(PLAYERS / f'{name}.png').convert('RGBA')
@@ -50,15 +71,15 @@ def place_render(base, name, x, feet_y, ppu, f, src_ppu=9, ty=26, el=6, tx=0):
     b = np.asarray(pm).astype(np.float32) / 255
     b[..., :3] = np.where(b[..., 3:] > 1e-3, b[..., :3] / np.maximum(b[..., 3:], 1e-3), 0)
     out = Image.fromarray((np.clip(b, 0, 1) * 255).round().astype(np.uint8), 'RGBA')
-    base.paste(out, (round(x * f - ax * s), round(feet_y * f - ay * s)), out)
+    over(layer, out, (round(x * f - ax * s), round(feet_y * f - ay * s)))
 
-def sky_mask(base):
+def sky_mask(ref):
     """255 where the background is bright open sky, 0 over stone."""
-    r, g, b = base.split()
+    r, g, b = ref.split()
     sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
-    return ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
+    return ImageChops.multiply(sky, ref.convert('L').point(lambda v: 255 if v > 70 else v * 3))
 
-def mob(base, name, x, y, scale, anchor='center', rim=False, behind=None, shadow=False):
+def mob(layer, name, x, y, scale, anchor='center', rim=False, behind=None, shadow=False, sky=None):
     """Paste a mob sprite; whole-number scales stay pixel-crisp, fractional ones are smoothed."""
     im = Image.open(MOBS / f'{name}.png').convert('RGBA')
     size = (max(1, round(im.width * scale)), max(1, round(im.height * scale)))
@@ -68,60 +89,75 @@ def mob(base, name, x, y, scale, anchor='center', rim=False, behind=None, shadow
     pos = (round(x - im.width / 2), round(top))
     if behind is not None:
         # standing behind a parapet: below its top line, stone stays in front of the mob
-        sky = sky_mask(base).crop((pos[0], pos[1], pos[0] + im.width, pos[1] + im.height))
+        sk = sky.crop((pos[0], pos[1], pos[0] + im.width, pos[1] + im.height))
         keep = Image.new('L', im.size, 255)
         cut = max(0, round(behind - pos[1]))
-        keep.paste(sky.crop((0, cut, im.width, im.height)).point(lambda v: 255 if v > 120 else 0), (0, cut))
+        keep.paste(sk.crop((0, cut, im.width, im.height)).point(lambda v: 255 if v > 120 else 0), (0, cut))
         im.putalpha(ImageChops.multiply(im.getchannel('A'), keep))
     if shadow:
         # soft contact shadow where the feet meet the ledge
-        sh = Image.new('L', base.size)
+        sh = Image.new('L', layer.size)
         w = im.width * .55
         ImageDraw.Draw(sh).ellipse([x - w, y - 2*scale, x + w, y + 2*scale], 170)
-        base.paste((8,2,3), (0, 0), sh.filter(ImageFilter.GaussianBlur(1.2*scale)))
+        over_color(layer, (8, 2, 3), (0, 0), sh.filter(ImageFilter.GaussianBlur(1.2*scale)))
     if rim:  # faint orange rim light so dark mobs read against dark stone
         pad = max(2, round(4 * scale))
         a = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
         a.paste(im.getchannel('A'), (pad, pad))
         a = a.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.5 * scale))
-        base.paste((255,130,40), (pos[0] - pad, pos[1] - pad), a.point(lambda v: int(v * .55)))
-    base.paste(im, pos, im)
+        over_color(layer, (255, 130, 40), (pos[0] - pad, pos[1] - pad), a.point(lambda v: int(v * .55)))
+    over(layer, im, pos)
 
-def glow(base, pts, f, color=(255,140,30), radius=26, strength=.8):
-    W, H = base.size
-    m = Image.new('L', (W, H))
-    d = ImageDraw.Draw(m)
-    for x, y, r in pts:
-        R = radius * r * f
-        d.ellipse([x*f - R, y*f - R, x*f + R, y*f + R], int(255 * strength))
-    m = m.filter(ImageFilter.GaussianBlur(radius * f * .6))
-    light = Image.new('RGB', (W, H), color)
-    return ImageChops.screen(base, Image.composite(light, Image.new('RGB', (W, H)), m))
+def blank(size):
+    return Image.new('RGBA', size, (0, 0, 0, 0))
 
-def scene(base, players=False):
-    W, H = base.size
-    f = W / 960
+# positions are in 960x540 space, read off fyre-background.webp at --bg-top 0.2
+PUMPKINS = [  # (x, surface y, block size)
+    (35, 162, 2), (140, 162, 2),   # long ledge on the far-left castle
+    (230, 184, 2),                 # ledge under the left tower's windows
+    (295, 244, 2),                 # left wall top
+    (385, 275, 2),                 # ledge under the left centre tower's windows
+    (545, 282, 2),                 # ledge under the right centre tower's windows
+    (610, 220, 2),                 # ledge on the tall right tower
+    (662, 252, 2), (726, 235, 2),  # right-hand wall top
+    (866, 214, 2),                 # far right wall
+]
+PUMPKIN_GATE = (470, 313, 3)       # gate wall, centre (the duel stands there when players are "on the bridge")
+PUMPKIN_HILL = (772, 300, 2)       # base of the big right tower (the explorer stands there when players are "on the hill")
+SKELETONS = [(80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)]  # (x, feet y, parapet top y)
+BATS = [(90,32,.8), (335,14,1.2), (560,16,.8), (815,34,1.2), (50,96,.8), (940,150,.8),
+        (255,200,1.2), (650,196,1.2), (330,300,1.2), (610,318,.8), (205,360,1.2),
+        (740,365,.8), (140,505,1.2), (500,503,.8), (830,505,1.2)]
+GHAST = {'default': (915, 290, 874, 304),   # ghast x,y and its fireball x,y
+         'hill': (940, 232, 909, 229)}      # moves up-right to give the duel room on the hill
+PLAYER_SPOTS = {'hill': {'duel': (852, 312, 1.85), 'explorer': (768, 301, 2.0)},      # x, feet y, px per unit
+                'bridge': {'duel': (470, 316, 2.0), 'explorer': (288, 399, 1.85)}}
+
+def build_layers(ref, f):
+    """Return {name: (RGBA layer, blend)} for every Halloween element, built against the clean
+    background `ref` (RGB). blend is 'normal' or 'screen'. Layers are drawn in dict order."""
+    W, H = ref.size
     rng = random.Random(31)
+    L = {}
+    sky = sky_mask(ref)
+    sky_soft = sky.filter(ImageFilter.GaussianBlur(2*f))
 
-    # the Minecraft moon behind the castle with a soft round glow; painted only where the
-    # pixel is bright sky, so the towers stay in front
+    # the Minecraft moon behind the castle; painted only where the pixel is bright sky, so the
+    # towers stay in front. A maroon veil makes the red disc stand out, plus a tight red rim glow.
     mx, my, size = 470*f, 226*f, 40*f
-    r, g, b = base.split()
-    sky = ImageChops.subtract(r, b).point(lambda v: 255 if v > 95 else int(v * 2.6))
-    sky = ImageChops.multiply(sky, base.convert('L').point(lambda v: 255 if v > 70 else v * 3))
-    # deep maroon veil around the moon so the red disc stands out, then a tight red glow at its rim
     veil = Image.new('L', (W, H))
     R = size * 2.4
     ImageDraw.Draw(veil).ellipse([mx - R, my - R, mx + R, my + R], 190)
-    veil = ImageChops.multiply(veil.filter(ImageFilter.GaussianBlur(size * .7)), sky.filter(ImageFilter.GaussianBlur(2*f)))
-    base = Image.composite(Image.new('RGB', (W, H), (74,8,12)), base, veil)
+    veil = ImageChops.multiply(veil.filter(ImageFilter.GaussianBlur(size * .7)), sky_soft)
+    layer = blank((W, H)); over_color(layer, (74, 8, 12), (0, 0), veil); L['moon_veil'] = (layer, 'normal')
     rim = Image.new('L', (W, H))
     R = size * .8
     ImageDraw.Draw(rim).ellipse([mx - R, my - R, mx + R, my + R], 255)
-    rim = ImageChops.multiply(rim.filter(ImageFilter.GaussianBlur(size * .28)), sky.filter(ImageFilter.GaussianBlur(2*f)))
-    base = ImageChops.screen(base, Image.composite(Image.new('RGB', (W, H), (214,40,28)), Image.new('RGB', (W, H)), rim))
+    rim = ImageChops.multiply(rim.filter(ImageFilter.GaussianBlur(size * .28)), sky_soft)
+    layer = blank((W, H)); over_color(layer, (214, 40, 28), (0, 0), rim); L['moon_rim'] = (layer, 'screen')
     moon = render_moon(W, H, mx, my, size)
-    base = Image.composite(moon.convert('RGB'), base, ImageChops.multiply(moon.getchannel('A'), sky))
+    moon.putalpha(ImageChops.multiply(moon.getchannel('A'), sky))
+    L['moon'] = (moon, 'normal')
 
     # purple and green mist low in the canyon
     W4, H4 = W // 8, H // 8
@@ -132,65 +168,113 @@ def scene(base, players=False):
             band = max(0, 1 - abs(y/H4 - .74) / .2)
             npx[x, y] = int(255 * band * (.35 + .65 * rng.random()))
     noise = noise.resize((W, H), Image.BICUBIC).filter(ImageFilter.GaussianBlur(14*f))
-    purple = Image.new('RGB', (W, H), (150,70,210))
-    green = Image.new('RGB', (W, H), (90,220,110))
-    base = Image.composite(purple, base, noise.point(lambda v: int(v * .42)))
+    layer = blank((W, H)); over_color(layer, (150, 70, 210), (0, 0), noise.point(lambda v: int(v * .42)))
     gmask = Image.new('L', (W, H))
     gd = ImageDraw.Draw(gmask)
     for x, y, r in ((150,420,70), (520,400,60), (820,430,80)):
         gd.ellipse([(x-r)*f, (y-r*.45)*f, (x+r)*f, (y+r*.45)*f], 70)
-    base = Image.composite(green, base, gmask.filter(ImageFilter.GaussianBlur(26*f)))
+    over_color(layer, (90, 220, 110), (0, 0), gmask.filter(ImageFilter.GaussianBlur(26*f)))
+    L['mist'] = (layer, 'normal')
 
-    # jack-o'-lanterns sitting on real ledges and wall tops: (x, surface y, block size).
-    # Surface heights were read off fyre-background.webp at --bg-top 0.2.
-    lanterns = [
-        (35, 162, 2), (140, 162, 2),           # long ledge on the far-left castle
-        (230, 184, 2),                         # ledge under the left tower's windows
-        (295, 244, 2),                         # left wall top
-        (385, 275, 2),                         # ledge under the left centre tower's windows
-        (470, 313, 3),                         # gate wall, centre
-        (545, 282, 2),                         # ledge under the right centre tower's windows
-        (610, 220, 2),                         # ledge on the tall right tower
-        (662, 252, 2), (726, 235, 2),          # right-hand wall top
-        *(() if players else ((772, 300, 2),)),  # base of the big right tower (the explorer stands there when --players)
-        (866, 214, 2),                         # far right wall
-    ]
-    d = ImageDraw.Draw(base)
-    for x, y, k in lanterns:
-        b = round(k * f)
-        sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
+    # jack-o'-lanterns sitting on ledges and wall tops
+    def pumpkins(pts):
+        lay = blank((W, H)); d = ImageDraw.Draw(lay)
+        for x, y, k in pts:
+            b = round(k * f)
+            sprite(d, PUMPKIN, x*f, y*f - len(PUMPKIN) * b / 2, b, outline=max(1, round(b / 2)))
+        return (lay, 'normal')
+    L['pumpkins'] = pumpkins(PUMPKINS)
+    L['pumpkin_gate'] = pumpkins([PUMPKIN_GATE])
+    L['pumpkin_hill'] = pumpkins([PUMPKIN_HILL])
 
-    if players:  # on the right-hand hill, with the ghast attacking: two players sword-fighting on the big
-        # stone terrace (y~311), one exploring along the step to its left (y~300) with a torch
-        place_render(base, 'duel', 853, 312, 1.4, f)
-        place_render(base, 'explorer', 778, 301, 1.5, f)
+    # two players sword-fighting and one exploring with a torch, on the hill or on the bridge
+    for where, spots in PLAYER_SPOTS.items():
+        for who, (x, y, ppu) in spots.items():
+            lay = blank((W, H)); place_render(lay, who, x, y, ppu, f); L[f'{who}_{where}'] = (lay, 'normal')
 
-    # mobs built from Minecraft's own textures (see mobs/README.md), spread across the width:
-    # wither skeletons standing behind battlements or on a ledge, the ghast floating in front of the right-hand hill,
-    # bats in the bright sky bands (x, y, scale)
-    # (x, feet y, parapet top y or None for an open ledge)
-    for x, y, wall in ((80, 142, None), (466, 392, None), (702, 233, None), (897, 218, 212)):
-        mob(base, 'wither_skeleton', x*f, y*f, 1.05*f, anchor='bottom', rim=True,
-            behind=wall*f if wall else None, shadow=wall is None)
-    # the ghast shooting a fireball: open mouth, with the fireball flying out toward the castle
-    gx, gy, fx, fy = (936, 249, 905, 246) if players else (915, 290, 874, 304)  # moves up-right to give the duel room
-    mob(base, 'ghast_shooting', gx*f, gy*f, 2.4*f)
-    mob(base, 'fireball', fx*f, fy*f, 2.0*f)
-    # bats spread over the whole canvas (x, y, scale): top strip, edges, below the logo, canyon, bottom
-    for x, y, s in ((90,32,.8), (335,14,1.2), (560,16,.8), (815,34,1.2), (50,96,.8), (940,150,.8),
-                    (255,200,1.2), (650,196,1.2), (330,300,1.2), (610,318,.8), (205,360,1.2),
-                    (740,365,.8), (140,505,1.2), (500,503,.8), (830,505,1.2)):
-        mob(base, 'bat', x*f, y*f, s*f)
-    return base
+    # wither skeletons standing behind battlements or on a ledge
+    lay = blank((W, H))
+    for x, y, wall in SKELETONS:
+        mob(lay, 'wither_skeleton', x*f, y*f, 1.05*f, anchor='bottom', rim=True,
+            behind=wall*f if wall else None, shadow=wall is None, sky=sky)
+    L['skeletons'] = (lay, 'normal')
 
-def logo_halo(base, im, pos, pad, W):
-    """Pumpkin-orange glow outside a tight dark edge, in place of the plain dark halo."""
+    # the ghast shooting a fireball: open mouth, fireball flying out toward the castle
+    for key, (gx, gy, fx, fy) in GHAST.items():
+        lay = blank((W, H))
+        mob(lay, 'ghast_shooting', gx*f, gy*f, 2.4*f)
+        mob(lay, 'fireball', fx*f, fy*f, 2.0*f)
+        L[f'ghast_{key}'] = (lay, 'normal')
+
+    # bats spread over the whole canvas
+    lay = blank((W, H))
+    for x, y, s in BATS:
+        mob(lay, 'bat', x*f, y*f, s*f)
+    L['bats'] = (lay, 'normal')
+    return L
+
+def composite(ref, layers, order):
+    """Composite the named layers over `ref` (RGB) in the given order; returns RGB."""
+    out = ref.convert('RGBA')
+    for name in order:
+        lay, blend = layers[name]
+        if blend == 'screen':
+            rgb = out.convert('RGB')
+            solid = Image.new('RGB', rgb.size, SCREEN_COLORS[name])
+            light = Image.composite(solid, Image.new('RGB', rgb.size), lay.getchannel('A'))
+            out = ImageChops.screen(rgb, light).convert('RGBA')
+        else:
+            out.alpha_composite(lay)
+    return out.convert('RGB')
+
+SCREEN_COLORS = {'moon_rim': (214, 40, 28)}
+
+def scene(base, players=False):
+    """Apply the Halloween layers to the clean background `base` (RGB) and return RGB."""
+    f = base.width / 960
+    L = build_layers(base, f)
+    where = 'hill' if players else None
+    order = ['moon_veil', 'moon_rim', 'moon', 'mist', 'pumpkins', 'pumpkin_gate']
+    if not players: order.append('pumpkin_hill')
+    if players: order += ['duel_hill', 'explorer_hill']
+    order += ['skeletons', 'ghast_hill' if players else 'ghast_default', 'bats']
+    return composite(base, L, order)
+
+def text_layer(path, size, width, top=None, bottom=None, spooky=False):
+    """The logo or tagline image with its halo, as an RGBA layer. `spooky` swaps the dark shadow
+    halo for a pumpkin-orange glow inside a tight dark edge."""
+    W, H = size
+    im = Image.open(path).convert('RGBA')
+    im = im.crop(im.getchannel('A').getbbox())
+    im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
+    y = top if top is not None else bottom - im.height
+    pos = ((W - width) // 2, y)
+    pad = W // 20
     a = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
     a.paste(im.getchannel('A'), (pad, pad))
-    wide = a.filter(ImageFilter.MaxFilter(2*(W//160)+1)).filter(ImageFilter.GaussianBlur(W/55))
-    base.paste((255,120,20), (pos[0]-pad, pos[1]-pad), wide.point(lambda v: int(v * .75)))
-    tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
-    base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), tight.point(lambda v: int(v * .9)))
+    layer = blank(size)
+    at = (pos[0] - pad, pos[1] - pad)
+    if spooky:
+        wide = a.filter(ImageFilter.MaxFilter(2*(W//160)+1)).filter(ImageFilter.GaussianBlur(W/55))
+        over_color(layer, (255, 120, 20), at, wide.point(lambda v: int(v * .75)))
+        tight = a.filter(ImageFilter.MaxFilter(2*(W//480)+1)).filter(ImageFilter.GaussianBlur(W/240))
+        over_color(layer, (12, 2, 3), at, tight.point(lambda v: int(v * .9)))
+    else:
+        halo = a.filter(ImageFilter.MaxFilter(2*(W//240)+1)).filter(ImageFilter.GaussianBlur(W/80))
+        over_color(layer, (12, 2, 3), at, halo.point(lambda v: int(v * .85)))
+    over(layer, im, pos)
+    return layer
+
+def shade_layer(size):
+    """Darkens the bottom strip so the tagline reads over the lava glow."""
+    W, H = size
+    ys = np.arange(H, dtype=np.float32) / H
+    t = np.clip((ys - .62) / .38, 0, None) * 1.4
+    alpha = (190 * np.minimum(1, t)).astype(np.uint8)
+    arr = np.zeros((H, W, 4), np.uint8)
+    arr[..., 0], arr[..., 1], arr[..., 2] = 14, 3, 4
+    arr[..., 3] = alpha[:, None]
+    return Image.fromarray(arr, 'RGBA')
 
 # The Minecraft full moon as a blood moon, 8x8: deep red face with a shaded right edge.
 MOON = ["LLLLLLLM",

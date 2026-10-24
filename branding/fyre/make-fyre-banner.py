@@ -242,38 +242,15 @@ def main():
             base = photo.crop((0, top, pw, top + ch)).resize((W, H), Image.LANCZOS)
             if args.halloween:
                 base = halloween.scene(base, players=args.players)
-            # darken the bottom strip so the tagline reads over the lava glow
-            shade = Image.new('L', (W, H))
-            sp = shade.load()
-            for y in range(H):
-                t = max(0, (y/H - .62) / .38)
-                for x in range(W):
-                    sp[x, y] = int(190 * min(1, t*1.4))
-            base = Image.composite(Image.new('RGB', (W, H), (14,3,4)), base, shade)
-            base.paste(text, (0, 0), text)
-            def overlay(path, width, top=None, bottom=None, spooky=False):
-                im = Image.open(path).convert('RGBA')
-                im = im.crop(im.getchannel('A').getbbox())
-                im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
-                y = top if top is not None else bottom - im.height
-                pos = ((W - width)//2, y)
-                # soft dark halo so the gold separates from the orange background
-                pad = W // 20
-                if spooky:
-                    halloween.logo_halo(base, im, pos, pad, W)
-                    base.paste(im, pos, im)
-                    return (pos[0], pos[1], pos[0] + im.width, pos[1] + im.height)
-                halo = Image.new('L', (im.width + 2*pad, im.height + 2*pad))
-                halo.paste(im.getchannel('A'), (pad, pad))
-                halo = halo.filter(ImageFilter.MaxFilter(2*(W//240)+1)).filter(ImageFilter.GaussianBlur(W/80))
-                halo = halo.point(lambda v: int(v * .85))
-                base.paste((12,2,3), (pos[0]-pad, pos[1]-pad), halo)
-                base.paste(im, pos, im)
+            base = base.convert('RGBA')
+            base.alpha_composite(halloween.shade_layer((W, H)))   # darken the bottom strip so the tagline reads
+            base.alpha_composite(text)
             if args.logo:
-                overlay(args.logo, round(W * .66), top=round(H * .06), spooky=args.halloween)
+                base.alpha_composite(halloween.text_layer(args.logo, (W, H), round(W * .66), top=round(H * .06), spooky=args.halloween))
             if args.tagline:
-                overlay(args.tagline, round(W * .94), bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale)
-            base.save(out, optimize=True)
+                base.alpha_composite(halloween.text_layer(args.tagline, (W, H), round(W * .94),
+                                                          bottom=((sub_y + 16) if args.sub2 else (GH - 12)) * scale))
+            base.convert('RGB').save(out, optimize=True)
         else:
             text.save(out, optimize=True)
         print(out)

@@ -1,57 +1,240 @@
-<title>Fyre Banner Board</title>
+<title>Fyre Banner Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;500;600&display=swap">
 <style>
-/* Layout: the two banners stacked on dark Nether stone, each with its download button. Deliberately single dark theme. */
-:root { --bg: #170b0b; --line: #3d1d1a; --gold: #e9a63a; --ink: #1a0a05; color-scheme: dark; }
-body { background: var(--bg); font: 14px/1.4 system-ui, sans-serif; }
+/* Layout: the live banner on top, option groups beneath as selectable chips, download last.
+   Deliberately single dark theme (Nether stone with lava orange). */
+:root {
+  --bg: #130909;
+  --panel: #1d0e0d;
+  --line: #40201c;
+  --ink: #f3e4d6;
+  --muted: #b39283;
+  --lava: #ff8a1f;
+  --lava-ink: #1a0a05;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Chakra Petch", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 500 15px/1.45 var(--body); }
 main {
-  max-width: 1000px; margin: 0 auto;
-  padding-block: 32px;
+  max-width: 1040px; margin: 0 auto;
+  padding-block: 28px 56px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 28px;
+  display: grid; gap: 22px;
 }
-figure { margin: 0; display: grid; gap: 10px; justify-items: end; }
-img { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); }
-button {
-  font: 600 14px/1 system-ui, sans-serif; color: var(--ink); background: var(--gold);
-  border: 0; padding: 10px 16px; cursor: pointer;
+h1 { margin: 0; font: 700 clamp(22px, 4.5vw, 30px)/1 var(--display); color: var(--lava); letter-spacing: .03em; }
+h2 { margin: 0 0 10px; font: 400 12px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stage { position: relative; border: 1px solid var(--line); background: var(--panel); }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.loading { position: absolute; inset: auto 12px 10px auto; font-size: 12px; color: var(--muted); }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px 28px; }
+.group { min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; display: inline-flex; }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip span, .preset {
+  display: inline-block; padding: 9px 14px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: 500 14px/1.1 var(--body); cursor: pointer; user-select: none;
 }
-button:hover { filter: brightness(1.1); }
-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-button:disabled { opacity: .6; cursor: default; }
+.chip input:hover + span, .preset:hover { border-color: var(--lava); }
+.chip input:checked + span, .preset[aria-pressed="true"] { background: var(--lava); border-color: var(--lava); color: var(--lava-ink); font-weight: 600; }
+.chip input:focus-visible + span, .preset:focus-visible, .dl:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.dlrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select {
+  font: 500 14px/1.1 var(--body); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); padding: 9px 12px;
+}
+.dl {
+  font: 600 14px/1.1 var(--body); color: var(--lava-ink); background: var(--lava);
+  border: 0; padding: 11px 18px; cursor: pointer;
+}
+.dl:hover { filter: brightness(1.08); }
+.dl:disabled { opacity: .55; cursor: default; }
+.status { min-height: 1.4em; margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.note { margin: 0; font-size: 13px; color: var(--muted); max-width: 62ch; }
 </style>
 
 <main>
-  <figure>
-    <img src="fyre-banner-1920x1080.png" width="1920" height="1080" alt="Fyre banner: gold FYRE.CC logo over a Nether fortress canyon, Daily PVP Events / Tournaments below">
-    <button type="button" id="dl-normal" data-file="fyre-banner-1920x1080.png" hidden>Download</button>
-  </figure>
-  <figure>
-    <img src="fyre-banner-halloween-1920x1080.png" width="1920" height="1080" alt="Fyre Halloween banner: Minecraft moon behind the castle, jack-o'-lanterns on the ledges, bats, a ghast, wither skeletons and purple mist">
-    <button type="button" id="dl-halloween" data-file="fyre-banner-halloween-1920x1080.png" hidden>Download</button>
-  </figure>
+  <h1>Fyre Banner Studio</h1>
+
+  <div class="stage">
+    <canvas id="stage" width="1920" height="1080" role="img" aria-label="Live preview of the Fyre banner with the options you have selected"></canvas>
+    <span class="loading" id="loading">Loading layers…</span>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <h2>Preset</h2>
+      <div class="row" id="presets">
+        <button type="button" class="preset" data-preset="classic">Classic</button>
+        <button type="button" class="preset" data-preset="halloween">Halloween</button>
+        <button type="button" class="preset" data-preset="players">Halloween + players</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Atmosphere</h2>
+      <div class="row">
+        <label class="chip"><input type="checkbox" id="moon"><span>Blood moon</span></label>
+        <label class="chip"><input type="checkbox" id="mist"><span>Canyon mist</span></label>
+        <label class="chip"><input type="checkbox" id="glow"><span>Orange logo glow</span></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Scenery</h2>
+      <div class="row">
+        <label class="chip"><input type="checkbox" id="pumpkins"><span>Pumpkins</span></label>
+        <label class="chip"><input type="checkbox" id="bats"><span>Bats</span></label>
+        <label class="chip"><input type="checkbox" id="skeletons"><span>Wither skeletons</span></label>
+        <label class="chip"><input type="checkbox" id="ghast"><span>Ghast &amp; fireball</span></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Players</h2>
+      <div class="row" role="radiogroup" aria-label="Players">
+        <label class="chip"><input type="radio" name="players" value="none"><span>None</span></label>
+        <label class="chip"><input type="radio" name="players" value="hill"><span>On the hill</span></label>
+        <label class="chip"><input type="radio" name="players" value="bridge"><span>On the bridge</span></label>
+      </div>
+      <p class="note" style="margin-top:8px">Two armoured players sword-fighting and one exploring with a torch.</p>
+    </div>
+
+    <div class="group">
+      <h2>Text</h2>
+      <div class="row">
+        <label class="chip"><input type="checkbox" id="logo"><span>Logo</span></label>
+        <label class="chip"><input type="checkbox" id="tagline"><span>Tagline</span></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Download</h2>
+      <div class="dlrow">
+        <select id="size" aria-label="Image size">
+          <option value="1920">1920 &times; 1080</option>
+          <option value="960">960 &times; 540</option>
+        </select>
+        <button type="button" class="dl" id="download" hidden>Download PNG</button>
+      </div>
+      <p class="status" id="status" role="status"></p>
+    </div>
+  </div>
 </main>
 
 <script>
-(async () => {
-  const downloads = await window.claude?.use?.("downloads");
-  if (!downloads) return;  // this view can't save files: leave the buttons hidden
-  for (const btn of document.querySelectorAll("button[data-file]")) {
-    btn.hidden = false;
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      try {
-        const blob = await (await fetch(btn.dataset.file)).blob();
-        await downloads.save({ filename: btn.dataset.file, data: blob });
-      } catch (e) {
-        if (e && ["unavailable", "not_granted", "capability_disabled", "capability_removed"].includes(e.code)) {
-          document.querySelectorAll("button[data-file]").forEach(b => b.hidden = true);
-        }
-      } finally {
-        btn.disabled = false;
-      }
-    });
+(() => {
+  const W = 1920, H = 1080;
+  const FILES = {
+    base: 'base.webp', moon_veil: 'moon_veil.png', moon_rim: 'moon_rim.png', moon: 'moon.png', mist: 'mist.png',
+    pumpkins: 'pumpkins.png', pumpkin_gate: 'pumpkin_gate.png', pumpkin_hill: 'pumpkin_hill.png',
+    duel_hill: 'duel_hill.png', explorer_hill: 'explorer_hill.png', duel_bridge: 'duel_bridge.png', explorer_bridge: 'explorer_bridge.png',
+    skeletons: 'skeletons.png', ghast_default: 'ghast_default.png', ghast_hill: 'ghast_hill.png', bats: 'bats.png',
+    shade: 'shade.png', logo_classic: 'logo_classic.png', logo_halloween: 'logo_halloween.png', tagline: 'tagline.png'
+  };
+  const PRESETS = {
+    classic:   { moon: 0, mist: 0, glow: 0, pumpkins: 0, bats: 0, skeletons: 0, ghast: 0, players: 'none' },
+    halloween: { moon: 1, mist: 1, glow: 1, pumpkins: 1, bats: 1, skeletons: 1, ghast: 1, players: 'none' },
+    players:   { moon: 1, mist: 1, glow: 1, pumpkins: 1, bats: 1, skeletons: 1, ghast: 1, players: 'hill' }
+  };
+  const EFFECT_KEYS = Object.keys(PRESETS.classic);
+  let state = { ...PRESETS.players, logo: 1, tagline: 1 };
+  try {
+    const saved = JSON.parse(localStorage.getItem('fyre-board') || 'null');
+    if (saved && typeof saved === 'object') state = { ...state, ...saved };
+  } catch (e) { /* storage unavailable: keep defaults */ }
+
+  const stage = document.getElementById('stage'), ctx = stage.getContext('2d');
+  const imgs = {};
+  const checks = ['moon', 'mist', 'glow', 'pumpkins', 'bats', 'skeletons', 'ghast', 'logo', 'tagline'];
+
+  function put(c, name, mode) {
+    const im = imgs[name]; if (!im) return;
+    c.globalCompositeOperation = mode || 'source-over';
+    c.drawImage(im, 0, 0, c.canvas.width, c.canvas.height);
+    c.globalCompositeOperation = 'source-over';
   }
+  // same stacking order as halloween.scene() and make-fyre-banner.py
+  function render(c) {
+    const s = state;
+    c.clearRect(0, 0, c.canvas.width, c.canvas.height);
+    c.imageSmoothingQuality = 'high';
+    put(c, 'base');
+    if (s.moon) { put(c, 'moon_veil'); put(c, 'moon_rim', 'screen'); put(c, 'moon'); }
+    if (s.mist) put(c, 'mist');
+    if (s.pumpkins) {
+      put(c, 'pumpkins');
+      if (s.players !== 'bridge') put(c, 'pumpkin_gate');
+      if (s.players !== 'hill') put(c, 'pumpkin_hill');
+    }
+    if (s.players === 'hill') { put(c, 'duel_hill'); put(c, 'explorer_hill'); }
+    if (s.players === 'bridge') { put(c, 'duel_bridge'); put(c, 'explorer_bridge'); }
+    if (s.skeletons) put(c, 'skeletons');
+    if (s.ghast) put(c, s.players === 'hill' ? 'ghast_hill' : 'ghast_default');
+    if (s.bats) put(c, 'bats');
+    put(c, 'shade');
+    if (s.logo) put(c, s.glow ? 'logo_halloween' : 'logo_classic');
+    if (s.tagline) put(c, 'tagline');
+  }
+
+  function presetName() {
+    for (const [name, p] of Object.entries(PRESETS)) if (EFFECT_KEYS.every((k) => state[k] === p[k])) return name;
+    return 'custom';
+  }
+  function sync() {
+    for (const id of checks) document.getElementById(id).checked = !!state[id];
+    for (const r of document.querySelectorAll('input[name="players"]')) r.checked = r.value === state.players;
+    const cur = presetName();
+    for (const b of document.querySelectorAll('.preset')) b.setAttribute('aria-pressed', String(b.dataset.preset === cur));
+    render(ctx);
+    try { localStorage.setItem('fyre-board', JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  for (const id of checks) document.getElementById(id).addEventListener('change', (e) => { state[id] = e.target.checked ? 1 : 0; sync(); });
+  for (const r of document.querySelectorAll('input[name="players"]')) r.addEventListener('change', () => { state.players = r.value; sync(); });
+  for (const b of document.querySelectorAll('.preset')) b.addEventListener('click', () => { Object.assign(state, PRESETS[b.dataset.preset]); sync(); });
+
+  // load the base first so the first paint is the photo, then fill in the rest
+  const load = (name) => new Promise((res) => {
+    const im = new Image(); im.onload = () => { imgs[name] = im; res(); }; im.onerror = () => res(); im.src = 'layers/' + FILES[name];
+  });
+  (async () => {
+    sync();
+    await load('base'); sync();
+    await Promise.all(Object.keys(FILES).filter((n) => n !== 'base').map((n) => load(n).then(() => render(ctx))));
+    document.getElementById('loading').hidden = true;
+    sync();
+  })();
+
+  // download
+  const status = document.getElementById('status');
+  (async () => {
+    let downloads = null;
+    try { downloads = await window.claude?.use?.('downloads'); } catch (e) { downloads = null; }
+    if (!downloads) return;
+    const btn = document.getElementById('download');
+    btn.hidden = false;
+    btn.addEventListener('click', async () => {
+      const w = +document.getElementById('size').value, h = w * 9 / 16;
+      const out = document.createElement('canvas'); out.width = w; out.height = h;
+      render(out.getContext('2d'));
+      const blob = await new Promise((r) => out.toBlob(r, 'image/png'));
+      if (!blob) { status.textContent = 'Could not create the image.'; return; }
+      const name = presetName() === 'custom' ? 'custom' : presetName() === 'players' ? 'halloween-players' : presetName();
+      btn.disabled = true; status.textContent = '';
+      try {
+        await downloads.save({ filename: `fyre-banner-${name}-${w}x${h}.png`, data: blob });
+        status.textContent = 'Saved.';
+      } catch (e) {
+        if (e && e.code === 'declined') status.textContent = '';
+        else if (e && ['unavailable', 'not_granted', 'capability_disabled', 'capability_removed'].includes(e.code)) { btn.hidden = true; status.textContent = 'Downloads are not available in this view.'; }
+        else status.textContent = 'The download did not go through. Try again.';
+      } finally { btn.disabled = false; }
+    });
+  })();
 })();
 </script>
