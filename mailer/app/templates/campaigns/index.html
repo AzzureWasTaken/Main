@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Campaigns{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Campaigns</h1><p class="sub">Drafts, scheduled sends and results.</p></div>
+  {% if current_user.can_edit %}<a class="btn primary" href="{{ url_for('campaigns.new') }}">New campaign</a>{% endif %}
+</div>
+<div class="card table-wrap">
+  {% if campaigns %}
+  <table class="data">
+    <thead><tr><th>Campaign</th><th>Status</th><th>Date</th><th class="num">Recipients</th><th class="num">Open rate</th><th class="num">Click rate</th></tr></thead>
+    <tbody>
+    {% for c in campaigns %}{% set s = stats[c.id] %}
+      <tr>
+        <td>
+          <a href="{{ url_for('campaigns.edit' if c.status == 'draft' else 'campaigns.report', campaign_id=c.id) }}">{{ c.name }}</a>
+          <div class="hint">{{ c.subject }}</div>
+        </td>
+        <td>{{ m.campaign_badge(c.status) }}</td>
+        <td>
+          {% if c.status == 'scheduled' %}{{ c.scheduled_at|localtime }}
+          {% elif c.started_at %}{{ c.started_at|localtime }}
+          {% else %}<span class="hint">Created {{ c.created_at|localtime('%d %b %Y') }}</span>{% endif %}
+        </td>
+        <td class="num">{{ s.recipients|num if s.recipients else '—' }}</td>
+        <td class="num">{{ m.rate(s.open_rate) }}</td>
+        <td class="num">{{ m.rate(s.click_rate) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No campaigns yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

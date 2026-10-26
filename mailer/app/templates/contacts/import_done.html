@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Import complete{% endblock %}
+{% block content %}
+<h1>Import complete</h1>
+<p class="sub">Contacts were added to the list “{{ target.name }}”.</p>
+<div class="grid stats">
+  {{ m.stat('New contacts', result.added|num) }}
+  {{ m.stat('Already existed', result.updated|num, 'details updated') }}
+  {{ m.stat('Kept suppressed', result.suppressed_kept|num, 'unsubscribed or bounced earlier') }}
+  {{ m.stat('Duplicates in file', result.duplicates|num) }}
+  {{ m.stat('Invalid emails', result.invalid|num, result.invalid_examples|join(', ')) }}
+</div>
+<a class="btn primary" href="{{ url_for('contacts.index', list=target.id) }}">View contacts</a>
+<a class="btn" href="{{ url_for('contacts.import_contacts') }}">Import another file</a>
+{% endblock %}

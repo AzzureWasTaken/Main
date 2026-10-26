@@ -1,0 +1,37 @@
+{% macro campaign_badge(status) -%}
+{% set colours = {'draft': '', 'scheduled': 'blue', 'sending': 'blue', 'paused': 'amber', 'sent': 'green', 'cancelled': 'red'} %}
+<span class="badge {{ colours.get(status, '') }}">{{ status|capitalize }}</span>
+{%- endmacro %}
+
+{% macro contact_badge(status) -%}
+{% set colours = {'subscribed': 'green', 'unsubscribed': '', 'bounced': 'amber', 'complained': 'red'} %}
+<span class="badge {{ colours.get(status, '') }}">{{ status|capitalize }}</span>
+{%- endmacro %}
+
+{% macro rate(value) -%}
+{{ '—' if value is none else value ~ '%' }}
+{%- endmacro %}
+
+{% macro stat(label, value, detail='', id='') -%}
+<div class="stat">
+  <div class="label">{{ label }}</div>
+  <div class="value" {% if id %}id="{{ id }}"{% endif %}>{{ value }}</div>
+  {% if detail %}<div class="detail" {% if id %}id="{{ id }}-detail"{% endif %}>{{ detail }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro pagination(page, endpoint) -%}
+{% if page.pages > 1 %}
+<div class="toolbar" style="margin-top: 16px;">
+  {% set args = dict(request.view_args or {}) %}
+  {% set _ = args.update(request.args.to_dict()) %}
+  {% if page.has_prev %}{% set _ = args.update(page=page.prev_num) %}<a class="btn small" href="{{ url_for(endpoint, **args) }}">← Previous</a>{% endif %}
+  <span class="hint">Page {{ page.page }} of {{ page.pages }} · {{ page.total|num }} total</span>
+  {% if page.has_next %}{% set _ = args.update(page=page.next_num) %}<a class="btn small" href="{{ url_for(endpoint, **args) }}">Next →</a>{% endif %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}

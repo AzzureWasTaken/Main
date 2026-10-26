@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Send {{ campaign.name }}{% endblock %}
+{% block content %}
+<h1>Send “{{ campaign.name }}”</h1>
+<p class="sub"><a href="{{ url_for('campaigns.edit', campaign_id=campaign.id) }}">← Back to editing</a></p>
+
+<div class="grid two" style="align-items: start;">
+  <div class="card">
+    <h2>Summary</h2>
+    <table class="data">
+      <tr><td>Subject</td><td>{{ campaign.subject }}</td></tr>
+      <tr><td>Lists</td><td>{% for l in campaign.lists %}<span class="badge">{{ l.name }}</span> {% else %}<span class="badge red">None selected</span>{% endfor %}</td></tr>
+      <tr><td>Recipients</td><td><strong>{{ recipient_count|num }}</strong> subscribed contacts <div class="hint">Unsubscribed, bounced and duplicate contacts are left out automatically.</div></td></tr>
+    </table>
+
+    {% if account %}
+      {% if account.error %}
+      <div class="flash error" style="margin-top: 16px;">Couldn't reach Amazon SES: {{ account.error }}</div>
+      {% else %}
+        {% if not account.production_access %}
+        <div class="flash error" style="margin-top: 16px;">Your SES account is in the <strong>sandbox</strong>: it can only send to verified addresses. Request production access before sending to your list (see README).</div>
+        {% endif %}
+        {% if recipient_count > account.max_24h - account.sent_24h %}
+        <div class="flash error" style="margin-top: 16px;">This campaign ({{ recipient_count|num }}) is larger than your remaining SES allowance today ({{ (account.max_24h - account.sent_24h)|num }}). Sending will pause when the limit is reached; resume it tomorrow or ask AWS for a higher quota.</div>
+        {% endif %}
+        <p class="hint">SES limits: {{ account.max_24h|num }} emails / 24h ({{ account.sent_24h|num }} used) · {{ account.max_rate }} per second. At that rate this campaign takes about {{ ((recipient_count / (account.max_rate or 1)) / 60)|round(0, 'ceil')|int }} min.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <form method="post" class="card">
+    {{ m.csrf() }}
+    <h2>When</h2>
+    <label class="inline"><input type="radio" name="mode" value="now" checked> Send now</label><br>
+    <label class="inline"><input type="radio" name="mode" value="schedule"> Schedule for later</label>
+    <input type="datetime-local" name="scheduled_at" style="margin-top: 8px;">
+    <div class="hint">Time is in this computer's time zone. The computer running Mailer must be on at the scheduled time.</div>
+
+    <label class="inline" style="margin-top: 20px;"><input type="checkbox" name="confirm" value="yes">
+      I've sent a test and checked it. Send to {{ recipient_count|num }} people.</label>
+    <p><button class="btn primary" {{ 'disabled' if not recipient_count }}>Confirm</button></p>
+  </form>
+</div>
+{% endblock %}

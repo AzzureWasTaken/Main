@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Mailer{% endblock %} · Mailer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="shell">
+  <nav class="sidebar">
+    <div class="brand">✉ Mailer</div>
+    {% set ep = request.endpoint or '' %}
+    <a class="nav {{ 'active' if ep.startswith('dashboard') }}" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+    <a class="nav {{ 'active' if ep.startswith('campaigns') }}" href="{{ url_for('campaigns.index') }}">Campaigns</a>
+    <a class="nav {{ 'active' if ep in ('contacts.index', 'contacts.import_contacts') }}" href="{{ url_for('contacts.index') }}">Contacts</a>
+    <a class="nav {{ 'active' if ep == 'contacts.lists' }}" href="{{ url_for('contacts.lists') }}">Lists</a>
+    {% if current_user.is_admin %}
+    <a class="nav {{ 'active' if ep == 'auth.users' }}" href="{{ url_for('auth.users') }}">Team</a>
+    <a class="nav {{ 'active' if ep.startswith('settings') }}" href="{{ url_for('settings.index') }}">Settings</a>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="who">{{ current_user.name }} · {{ current_user.role }}</div>
+    <a class="nav {{ 'active' if ep == 'auth.account' }}" href="{{ url_for('auth.account') }}">My account</a>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn small" style="margin: 8px 12px;">Log out</button>
+    </form>
+  </nav>
+  <main class="main">
+    {% if config.MAIL_BACKEND != 'ses' %}
+    <div class="banner"><strong>Demo mode:</strong> emails are logged, not sent, and the stats are simulated. Set <code>MAIL_BACKEND=ses</code> in <code>.env</code> to send for real.</div>
+    {% endif %}
+    {% include "_flashes.html" %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+<div class="auth">
+  {% include "_flashes.html" %}
+  {% block auth %}{% endblock %}
+</div>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Contacts{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Contacts</h1>
+    <p class="sub">
+      {{ counts.get('subscribed', 0)|num }} subscribed ·
+      {{ counts.get('unsubscribed', 0)|num }} unsubscribed ·
+      {{ counts.get('bounced', 0)|num }} bounced ·
+      {{ counts.get('complained', 0)|num }} complained
+    </p>
+  </div>
+  {% if current_user.can_edit %}<a class="btn primary" href="{{ url_for('contacts.import_contacts') }}">Import CSV</a>{% endif %}
+</div>
+
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search name or email" style="min-width: 240px;">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s|capitalize }}</option>{% endfor %}
+  </select>
+  <select name="list">
+    <option value="">All lists</option>
+    {% for l in lists %}<option value="{{ l.id }}" {{ 'selected' if l.id == list_id }}>{{ l.name }}</option>{% endfor %}
+  </select>
+  <button class="btn">Filter</button>
+  {% if q or status or list_id %}<a class="btn" href="{{ url_for('contacts.index') }}">Clear</a>{% endif %}
+</form>
+
+<div class="card table-wrap">
+  {% if page.items %}
+  <table class="data">
+    <thead><tr><th>Email</th><th>Name</th><th>Lists</th><th>Status</th><th>Added</th>{% if current_user.can_edit %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for c in page.items %}
+      <tr>
+        <td>{{ c.email }}</td>
+        <td>{{ c.first_name }} {{ c.last_name }}</td>
+        <td>{% for l in c.lists %}<span class="badge">{{ l.name }}</span> {% endfor %}</td>
+        <td>{{ m.contact_badge(c.status) }}</td>
+        <td>{{ c.created_at|localtime('%d %b %Y') }}</td>
+        {% if current_user.can_edit %}
+        <td style="white-space: nowrap;">
+          {% if c.status == 'subscribed' %}
+          <form method="post" action="{{ url_for('contacts.set_status', contact_id=c.id) }}" class="inline-form">
+            {{ m.csrf() }}<input type="hidden" name="action" value="unsubscribe">
+            <button class="btn small">Unsubscribe</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('contacts.set_status', contact_id=c.id) }}" class="inline-form"
+                onsubmit="return confirm('Delete this contact? Unsubscribed contacts are better kept so they are never re-imported by mistake.');">
+            {{ m.csrf() }}<input type="hidden" name="action" value="delete">
+            <button class="btn small danger">Delete</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {{ m.pagination(page, 'contacts.index') }}
+  {% else %}
+  <div class="empty">No contacts found.</div>
+  {% endif %}
+</div>
+{% endblock %}

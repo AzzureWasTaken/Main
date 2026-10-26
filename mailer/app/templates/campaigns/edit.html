@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ 'New campaign' if is_new else campaign.name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/quill.snow.css') }}">
+{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ 'New campaign' if is_new else campaign.name }}</h1>
+    <p class="sub">{% if not is_new %}{{ m.campaign_badge(campaign.status) }}{% if campaign.status == 'scheduled' %} · sends {{ campaign.scheduled_at|localtime }}{% endif %}{% else %}Write your email, then send a test before sending to your list.{% endif %}</p>
+  </div>
+  {% if not is_new %}
+  <div class="toolbar">
+    {% if campaign.status == 'scheduled' %}
+    <form method="post" action="{{ url_for('campaigns.action', campaign_id=campaign.id) }}" class="inline-form">
+      {{ m.csrf() }}<button class="btn" name="action" value="unschedule">Unschedule</button>
+    </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('campaigns.action', campaign_id=campaign.id) }}" class="inline-form">
+      {{ m.csrf() }}<button class="btn" name="action" value="duplicate">Duplicate</button>
+    </form>
+    <form method="post" action="{{ url_for('campaigns.action', campaign_id=campaign.id) }}" class="inline-form"
+          onsubmit="return confirm('Delete this campaign?');">
+      {{ m.csrf() }}<button class="btn danger" name="action" value="delete">Delete</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid two" style="align-items: start;">
+  <form method="post" id="campaign-form" class="card">
+    {{ m.csrf() }}
+    <label for="name">Campaign name <span class="hint">(internal only)</span></label>
+    <input type="text" id="name" name="name" value="{{ campaign.name }}" placeholder="e.g. November newsletter" required>
+
+    <label for="subject">Subject line</label>
+    <input type="text" id="subject" name="subject" value="{{ campaign.subject }}" required>
+
+    <label for="preview_text">Preview text <span class="hint">(the grey line shown after the subject in most inboxes)</span></label>
+    <input type="text" id="preview_text" name="preview_text" value="{{ campaign.preview_text or '' }}">
+
+    <label>Send to</label>
+    {% for l in lists %}
+      <label class="inline"><input type="checkbox" name="list_ids" value="{{ l.id }}" {{ 'checked' if l.id in selected }}> {{ l.name }}</label>
+    {% else %}
+      <div class="hint">No lists yet — <a href="{{ url_for('contacts.import_contacts') }}">import contacts</a> first.</div>
+    {% endfor %}
+
+    <label>Email body</label>
+    <div class="toolbar" style="margin-bottom: 8px;">
+      <span class="hint">Insert:</span>
+      <button type="button" class="btn small" data-insert="{{ '{{ first_name }}' }}">First name</button>
+      <button type="button" class="btn small" data-insert="{{ '{{ last_name }}' }}">Last name</button>
+      <button type="button" class="btn small" data-insert="{{ '{{ email }}' }}">Email</button>
+    </div>
+    <div class="tabs">
+      <button type="button" data-mode="visual" class="active">Visual</button>
+      <button type="button" data-mode="html">HTML</button>
+    </div>
+    <div id="visual-wrap"><div id="visual-editor"></div></div>
+    <textarea id="body_html" name="body_html" class="code" style="display: none;">{{ campaign.body_html }}</textarea>
+    <div class="hint">
+      Tip: <code>{{ '{{ first_name or "there" }}' }}</code> falls back to “there” when a name is missing.
+      Your postal address and an unsubscribe link are added to the footer automatically.
+    </div>
+
+    <p class="toolbar" style="margin-top: 20px;">
+      <button class="btn" name="next" value="save">Save draft</button>
+      <button class="btn primary" name="next" value="send">Save &amp; continue to send →</button>
+    </p>
+  </form>
+
+  <div>
+    {% if not is_new %}
+    <div class="card">
+      <h2>Send a test</h2>
+      <form method="post" action="{{ url_for('campaigns.test_send', campaign_id=campaign.id) }}" class="toolbar" style="margin: 0;">
+        {{ m.csrf() }}
+        <input type="text" name="emails" placeholder="you@yourdomain.com, colleague@…" style="flex: 1;" required>
+        <button class="btn">Send test</button>
+      </form>
+      <div class="hint">Uses the saved version. Personalisation uses the first contact on the selected lists.</div>
+    </div>
+    <h2>Preview <span class="hint">(saved version)</span></h2>
+    <iframe class="preview" src="{{ url_for('campaigns.preview', campaign_id=campaign.id) }}" sandbox></iframe>
+    {% else %}
+    <div class="card empty">Save the draft to see a preview and send a test.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/quill.js') }}"></script>
+<script>
+(function () {
+  const textarea = document.getElementById('body_html');
+  const visualWrap = document.getElementById('visual-wrap');
+  if (typeof Quill === 'undefined') {
+    // Editor script failed to load: fall back to plain HTML editing.
+    visualWrap.style.display = 'none';
+    textarea.style.display = '';
+    document.querySelector('.tabs').style.display = 'none';
+    return;
+  }
+  const quill = new Quill('#visual-editor', {
+    theme: 'snow',
+    modules: { toolbar: [[{ header: [1, 2, 3, false] }], ['bold', 'italic', 'underline'], ['link', 'image'],
+                         [{ list: 'ordered' }, { list: 'bullet' }], ['clean']] },
+  });
+
+  // HTML the visual editor can't represent (tables, inline styles) opens in HTML mode instead.
+  const complex = /<(table|style|div|span[^>]+style)/i.test(textarea.value);
+  let mode = complex ? 'html' : 'visual';
+
+  function quillHtml() {
+    return quill.getSemanticHTML().replace(/&nbsp;/g, ' ');
+  }
+
+  function setMode(next) {
+    if (next === mode) return;
+    if (next === 'html') {
+      textarea.value = quillHtml();
+    } else {
+      if (/<(table|style|div)/i.test(textarea.value) &&
+          !confirm('The visual editor may drop custom HTML such as tables and styles. Switch anyway?')) return;
+      quill.clipboard.dangerouslyPasteHTML(textarea.value);
+    }
+    mode = next;
+    render();
+  }
+
+  function render() {
+    visualWrap.style.display = mode === 'visual' ? '' : 'none';
+    textarea.style.display = mode === 'html' ? '' : 'none';
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  }
+
+  if (mode === 'visual') quill.clipboard.dangerouslyPasteHTML(textarea.value);
+  render();
+
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  document.querySelectorAll('[data-insert]').forEach(b => {
+    // Keep the cursor in the editor when the button is pressed.
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => insertTag(b.dataset.insert));
+  });
+
+  function insertTag(tag) {
+    if (mode === 'visual') {
+      const range = quill.getSelection() || { index: Math.max(quill.getLength() - 1, 0), length: 0 };
+      quill.deleteText(range.index, range.length, 'user');
+      quill.insertText(range.index, tag, 'user');
+      quill.setSelection(range.index + tag.length, 0, 'user');
+    } else {
+      const start = textarea.selectionStart, end = textarea.selectionEnd;
+      textarea.setRangeText(tag, start, end, 'end');
+      textarea.focus();
+    }
+  }
+
+  document.getElementById('campaign-form').addEventListener('submit', () => {
+    if (mode === 'visual') textarea.value = quillHtml();
+  });
+})();
+</script>
+{% endblock %}

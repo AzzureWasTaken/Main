@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ campaign.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ campaign.name }}</h1>
+    <p class="sub">
+      <span id="status-badge">{{ m.campaign_badge(campaign.status) }}</span>
+      “{{ campaign.subject }}” ·
+      {% if campaign.status == 'scheduled' %}sends {{ campaign.scheduled_at|localtime }}{% else %}started {{ campaign.started_at|localtime }}{% endif %}
+      {% if campaign.created_by %}· by {{ campaign.created_by.name }}{% endif %}
+      · to {% for l in campaign.lists %}{{ l.name }}{{ ', ' if not loop.last }}{% endfor %}
+    </p>
+  </div>
+  {% if current_user.can_edit %}
+  <form method="post" action="{{ url_for('campaigns.action', campaign_id=campaign.id) }}" class="toolbar">
+    {{ m.csrf() }}
+    {% if campaign.status == 'scheduled' %}
+      <a class="btn" href="{{ url_for('campaigns.edit', campaign_id=campaign.id) }}">Edit</a>
+      <button class="btn" name="action" value="unschedule">Unschedule</button>
+    {% endif %}
+    {% if campaign.status == 'sending' %}<button class="btn" name="action" value="pause">Pause</button>{% endif %}
+    {% if campaign.status == 'paused' %}<button class="btn primary" name="action" value="resume">Resume</button>{% endif %}
+    {% if campaign.status in ('sending', 'paused') %}
+      <button class="btn danger" name="action" value="cancel" onclick="return confirm('Stop sending? Emails already sent cannot be recalled.');">Cancel</button>
+    {% endif %}
+    <button class="btn" name="action" value="duplicate">Duplicate</button>
+  </form>
+  {% endif %}
+</div>
+
+<div id="error-box" class="flash error" {% if not campaign.last_error %}style="display: none;"{% endif %}>{{ campaign.last_error or '' }}</div>
+
+<div class="card" id="progress-card" {% if campaign.status not in ('sending', 'paused') %}style="display: none;"{% endif %}>
+  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+    <strong>Sending progress</strong><span id="progress-text">{{ stats.progress or 0 }}%</span>
+  </div>
+  <div class="progress"><div id="progress-bar" style="width: {{ stats.progress or 0 }}%;"></div></div>
+</div>
+
+<div class="grid stats">
+  {{ m.stat('Recipients', stats.recipients|num, stats.failed|num ~ ' failed · ' ~ stats.skipped|num ~ ' skipped', id='s-recipients') }}
+  {{ m.stat('Delivered', stats.delivered|num, m.rate(stats.delivery_rate) ~ ' of sent', id='s-delivered') }}
+  {{ m.stat('Opened', stats.opened|num, m.rate(stats.open_rate) ~ ' open rate', id='s-opened') }}
+  {{ m.stat('Clicked', stats.clicked|num, m.rate(stats.click_rate) ~ ' click rate', id='s-clicked') }}
+  {{ m.stat('Bounced', stats.bounced|num, stats.hard_bounced|num ~ ' permanent', id='s-bounced') }}
+  {{ m.stat('Unsubscribed', stats.unsubscribed|num, stats.complained|num ~ ' spam complaints', id='s-unsubscribed') }}
+</div>
+
+<div class="grid two" style="align-items: start;">
+  <div class="card">
+    <h2>Opens &amp; clicks over time</h2>
+    <div style="height: 260px;"><canvas id="timeline"></canvas></div>
+    <p class="hint">Open counts are an estimate: Apple Mail pre-loads images (counting as opens) and some apps block them (hiding opens). Clicks are reliable.</p>
+  </div>
+  <div class="card table-wrap">
+    <h2>Top links</h2>
+    {% if links %}
+    <table class="data">
+      <thead><tr><th>Link</th><th class="num">People</th><th class="num">Clicks</th></tr></thead>
+      {% for url, people, clicks in links %}
+      <tr><td style="word-break: break-all;">{{ url }}</td><td class="num">{{ people|num }}</td><td class="num">{{ clicks|num }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<div class="empty">No clicks yet.</div>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Recipients</h2>
+  <div class="toolbar" style="margin: 0;">
+    <a class="btn small" href="{{ url_for('campaigns.recipients', campaign_id=campaign.id) }}">Everyone</a>
+    {% for f in ('opened', 'clicked', 'not_opened', 'bounced', 'unsubscribed', 'complained', 'failed') %}
+    <a class="btn small" href="{{ url_for('campaigns.recipients', campaign_id=campaign.id, filter=f) }}">{{ f|replace('_', ' ')|capitalize }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<h2>Email</h2>
+<iframe class="preview" src="{{ url_for('campaigns.preview', campaign_id=campaign.id) }}" sandbox></iframe>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script>
+(function () {
+  const fmt = n => (n || 0).toLocaleString();
+  const rate = r => r === null || r === undefined ? '—' : r + '%';
+  const hourLabel = iso => new Date(iso).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  let timeline = {{ timeline|tojson }};
+  const chart = new Chart(document.getElementById('timeline'), {
+    type: 'line',
+    data: {
+      labels: timeline.labels.map(hourLabel),
+      datasets: [
+        { label: 'Opens', data: timeline.opens, borderColor: '#2f6fed', backgroundColor: 'rgba(47,111,237,.1)', fill: true, tension: .3 },
+        { label: 'Clicks', data: timeline.clicks, borderColor: '#1f9d55', backgroundColor: 'rgba(31,157,85,.1)', fill: true, tension: .3 },
+      ],
+    },
+    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+               plugins: { legend: { position: 'bottom' } } },
+  });
+
+  function set(id, value, detail) {
+    document.getElementById(id).textContent = value;
+    const d = document.getElementById(id + '-detail');
+    if (d) d.textContent = detail;
+  }
+
+  let lastStatus = {{ campaign.status|tojson }};
+  async function refresh() {
+    const res = await fetch({{ url_for('campaigns.stats_json', campaign_id=campaign.id)|tojson }});
+    if (!res.ok) return;
+    const data = await res.json(), s = data.stats;
+    set('s-recipients', fmt(s.recipients), `${fmt(s.failed)} failed · ${fmt(s.skipped)} skipped`);
+    set('s-delivered', fmt(s.delivered), `${rate(s.delivery_rate)} of sent`);
+    set('s-opened', fmt(s.opened), `${rate(s.open_rate)} open rate`);
+    set('s-clicked', fmt(s.clicked), `${rate(s.click_rate)} click rate`);
+    set('s-bounced', fmt(s.bounced), `${fmt(s.hard_bounced)} permanent`);
+    set('s-unsubscribed', fmt(s.unsubscribed), `${fmt(s.complained)} spam complaints`);
+    document.getElementById('progress-bar').style.width = (s.progress || 0) + '%';
+    document.getElementById('progress-text').textContent = (s.progress || 0) + '%';
+    const err = document.getElementById('error-box');
+    err.textContent = data.last_error || '';
+    err.style.display = data.last_error ? '' : 'none';
+    chart.data.labels = data.timeline.labels.map(hourLabel);
+    chart.data.datasets[0].data = data.timeline.opens;
+    chart.data.datasets[1].data = data.timeline.clicks;
+    chart.update('none');
+    if (data.status !== lastStatus) location.reload();  // refresh buttons and badges
+  }
+  // Poll quickly while sending, slowly afterwards (opens keep arriving for days).
+  const active = ['scheduled', 'sending'].includes(lastStatus);
+  setInterval(refresh, active ? 3000 : 30000);
+})();
+</script>
+{% endblock %}

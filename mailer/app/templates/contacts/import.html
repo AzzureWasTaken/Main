@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Import contacts{% endblock %}
+{% block content %}
+<h1>Import contacts</h1>
+<p class="sub">Upload a CSV exported from Excel, Google Sheets or another tool.</p>
+
+<div class="grid two">
+  <div class="card">
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="file">CSV file</label>
+      <input type="file" id="file" name="file" accept=".csv,text/csv" required>
+
+      <label for="list_id">Add contacts to list</label>
+      <select id="list_id" name="list_id">
+        <option value="">— Choose a list —</option>
+        {% for l in lists %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+      </select>
+      <label for="new_list">…or create a new list</label>
+      <input type="text" id="new_list" name="new_list" placeholder="e.g. Newsletter subscribers">
+
+      <label class="inline" style="margin-top: 16px;">
+        <input type="checkbox" required> Everyone in this file has agreed to receive marketing email from us.
+      </label>
+      <p><button class="btn primary">Import</button></p>
+    </form>
+  </div>
+  <div class="card">
+    <h2>File format</h2>
+    <p>The first row must be column headings. Only an <code>email</code> column is required.</p>
+    <ul>
+      <li><code>first_name</code>, <code>last_name</code> (or a single <code>name</code> column) are used for greetings.</li>
+      <li>Any other columns are saved too, and can be used in emails, e.g. a <code>company</code> column becomes <code>{{ '{{ company }}' }}</code>.</li>
+      <li>Duplicate emails are merged. Contacts who unsubscribed or bounced stay unsubscribed, even if they appear in a new file.</li>
+    </ul>
+    <pre style="background: var(--bg); padding: 12px; border-radius: 6px; overflow-x: auto;">email,first_name,last_name,company
+jane@example.com,Jane,Doe,Acme Ltd
+sam@example.org,Sam,Lee,</pre>
+  </div>
+</div>
+{% endblock %}

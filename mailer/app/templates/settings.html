@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+<p class="sub">Sender details used in every campaign.</p>
+
+<div class="grid two" style="align-items: start;">
+  <form method="post" class="card">
+    {{ m.csrf() }}
+    <h2>Sender</h2>
+    <label for="from_name">From name</label>
+    <input type="text" id="from_name" name="from_name" value="{{ values.from_name }}" placeholder="e.g. Acme Updates">
+    <label for="from_email">From email address</label>
+    <input type="email" id="from_email" name="from_email" value="{{ values.from_email }}" placeholder="news@yourdomain.com">
+    <div class="hint">Must be on the domain you verified in Amazon SES.</div>
+    <label for="reply_to">Reply-to address <span class="hint">(optional)</span></label>
+    <input type="email" id="reply_to" name="reply_to" value="{{ values.reply_to }}" placeholder="hello@yourdomain.com">
+    <div class="hint">Where replies go. Leave blank to use the From address.</div>
+    <label for="postal_address">Postal address</label>
+    <textarea id="postal_address" name="postal_address" placeholder="Company name&#10;Street&#10;Town, Postcode">{{ values.postal_address }}</textarea>
+    <div class="hint">Shown in every email's footer. Marketing law (CAN-SPAM, PECR) requires a physical address.</div>
+    <p><button class="btn primary">Save settings</button></p>
+  </form>
+
+  <div class="card">
+    <h2>Amazon SES</h2>
+    <table class="data">
+      <tr><td>Mode</td><td>{% if backend == 'ses' %}<span class="badge green">Live (SES)</span>{% else %}<span class="badge amber">Demo</span>{% endif %}</td></tr>
+      <tr><td>Region</td><td>{{ region }}</td></tr>
+    </table>
+    {% if backend == 'ses' %}
+      <p><a class="btn" href="{{ url_for('settings.index', check=1) }}">Check connection</a></p>
+      {% if status_error %}
+      <div class="flash error">Couldn't connect: {{ status_error }}</div>
+      {% elif status %}
+      <table class="data">
+        <tr><td>Production access</td><td>{% if status.production_access %}<span class="badge green">Yes</span>{% else %}<span class="badge red">No — still in sandbox</span>{% endif %}</td></tr>
+        <tr><td>Sending enabled</td><td>{% if status.sending_enabled %}<span class="badge green">Yes</span>{% else %}<span class="badge red">No</span>{% endif %}</td></tr>
+        <tr><td>Daily limit</td><td>{{ status.max_24h|num }} ({{ status.sent_24h|num }} used in last 24h)</td></tr>
+        <tr><td>Max send rate</td><td>{{ status.max_rate }} / second</td></tr>
+      </table>
+      {% endif %}
+    {% else %}
+      <p class="hint">Demo mode doesn't send real email. Follow the README to set up Amazon SES, then set <code>MAIL_BACKEND=ses</code> in <code>.env</code> and restart.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

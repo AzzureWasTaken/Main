@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Team{% endblock %}
+{% block content %}
+<h1>Team</h1>
+<p class="sub"><strong>Admins</strong> manage the team and settings. <strong>Editors</strong> create and send campaigns and manage contacts. <strong>Viewers</strong> can only look at reports.</p>
+
+<div class="card table-wrap">
+  <table class="data">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Reset password</th><th></th></tr></thead>
+    <tbody>
+    {% for user in users %}
+      <tr>
+        <td>{{ user.name }}{% if user.id == current_user.id %} <span class="badge">You</span>{% endif %}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <form method="post" action="{{ url_for('auth.update_user', user_id=user.id) }}" class="inline-form">
+            {{ m.csrf() }}<input type="hidden" name="action" value="role">
+            <select name="role" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}>
+              {% for role in roles %}<option value="{{ role }}" {{ 'selected' if role == user.role }}>{{ role|capitalize }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('auth.update_user', user_id=user.id) }}" class="toolbar" style="margin: 0;">
+            {{ m.csrf() }}<input type="hidden" name="action" value="password">
+            <input type="password" name="password" placeholder="New password" minlength="10" required style="max-width: 170px;">
+            <button class="btn small">Set</button>
+          </form>
+        </td>
+        <td>
+          {% if user.id != current_user.id %}
+          <form method="post" action="{{ url_for('auth.update_user', user_id=user.id) }}" class="inline-form"
+                onsubmit='return confirm({{ ("Remove " ~ user.name ~ " from the team?")|tojson }});'>
+            {{ m.csrf() }}<input type="hidden" name="action" value="delete">
+            <button class="btn small danger">Remove</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="max-width: 640px;">
+  <h2>Add a team member</h2>
+  <form method="post" action="{{ url_for('auth.create_user') }}">
+    {{ m.csrf() }}
+    <div class="form-row">
+      <div><label for="name">Name</label><input type="text" id="name" name="name" required></div>
+      <div><label for="email">Email</label><input type="email" id="email" name="email" required></div>
+    </div>
+    <div class="form-row">
+      <div><label for="password">Temporary password</label><input type="password" id="password" name="password" minlength="10" required>
+        <div class="hint">They can change it under “My account”.</div></div>
+      <div><label for="role">Role</label>
+        <select id="role" name="role">{% for role in roles %}<option value="{{ role }}" {{ 'selected' if role == 'editor' }}>{{ role|capitalize }}</option>{% endfor %}</select></div>
+    </div>
+    <p><button class="btn primary">Add member</button></p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="sub">Totals across your last {{ recent|length }} campaign{{ '' if recent|length == 1 else 's' }}.</p>
+  </div>
+  {% if current_user.can_edit %}<a class="btn primary" href="{{ url_for('campaigns.new') }}">New campaign</a>{% endif %}
+</div>
+
+<div class="grid stats">
+  {{ m.stat('Subscribed contacts', contact_counts.get('subscribed', 0)|num,
+            (contact_counts.get('unsubscribed', 0) + contact_counts.get('bounced', 0) + contact_counts.get('complained', 0))|num ~ ' suppressed') }}
+  {{ m.stat('Emails sent', totals.sent|num) }}
+  {{ m.stat('Delivered', totals.delivered|num, totals.delivered|pct(totals.sent) ~ ' of sent') }}
+  {{ m.stat('Opened', totals.opened|num, totals.opened|pct(totals.delivered) ~ ' open rate') }}
+  {{ m.stat('Clicked', totals.clicked|num, totals.clicked|pct(totals.delivered) ~ ' click rate') }}
+  {{ m.stat('Unsubscribed', totals.unsubscribed|num, totals.bounced|num ~ ' bounced') }}
+</div>
+
+{% if upcoming %}
+<div class="card">
+  <h2>In progress &amp; scheduled</h2>
+  <table class="data">
+    {% for c in upcoming %}
+    <tr>
+      <td><a href="{{ url_for('campaigns.report', campaign_id=c.id) }}">{{ c.name }}</a></td>
+      <td>{{ m.campaign_badge(c.status) }}</td>
+      <td class="num">{% if c.status == 'scheduled' %}Sends {{ c.scheduled_at|localtime }}{% else %}{{ stats.get(c.id, {}).get('progress') or 0 }}% sent{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if recent %}
+<div class="card">
+  <h2>Open &amp; click rate by campaign</h2>
+  <div style="height: 280px;"><canvas id="rates"></canvas></div>
+</div>
+
+<div class="card table-wrap">
+  <h2>Recent campaigns</h2>
+  <table class="data">
+    <thead><tr><th>Campaign</th><th>Sent</th><th class="num">Recipients</th><th class="num">Delivered</th><th class="num">Open rate</th><th class="num">Click rate</th><th class="num">Unsubs</th></tr></thead>
+    <tbody>
+    {% for c in recent %}{% set s = stats[c.id] %}
+      <tr>
+        <td><a href="{{ url_for('campaigns.report', campaign_id=c.id) }}">{{ c.name }}</a> {{ m.campaign_badge(c.status) }}</td>
+        <td>{{ c.started_at|localtime('%d %b %Y') }}</td>
+        <td class="num">{{ s.recipients|num }}</td>
+        <td class="num">{{ s.delivered|num }}</td>
+        <td class="num">{{ m.rate(s.open_rate) }}</td>
+        <td class="num">{{ m.rate(s.click_rate) }}</td>
+        <td class="num">{{ s.unsubscribed|num }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty">
+  No campaigns sent yet. Start by <a href="{{ url_for('contacts.import_contacts') }}">importing contacts</a>, then create a campaign.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if recent %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script>
+  const chart = {{ chart|tojson }};
+  new Chart(document.getElementById('rates'), {
+    type: 'bar',
+    data: {
+      labels: chart.labels,
+      datasets: [
+        { label: 'Open rate %', data: chart.open_rate, backgroundColor: '#2f6fed' },
+        { label: 'Click rate %', data: chart.click_rate, backgroundColor: '#1f9d55' },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  });
+</script>
+{% endif %}
+{% endblock %}

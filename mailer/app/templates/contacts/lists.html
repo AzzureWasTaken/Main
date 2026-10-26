@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Lists{% endblock %}
+{% block content %}
+<h1>Lists</h1>
+<p class="sub">Group contacts into lists, then choose which lists each campaign goes to. A contact on several lists only gets one copy.</p>
+
+<div class="card table-wrap">
+  {% if rows %}
+  <table class="data">
+    <thead><tr><th>List</th><th class="num">Subscribed</th><th class="num">Total</th><th>Created</th>{% if current_user.can_edit %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for l, subscribed, total in rows %}
+      <tr>
+        <td><a href="{{ url_for('contacts.index', list=l.id) }}">{{ l.name }}</a></td>
+        <td class="num">{{ subscribed|num }}</td>
+        <td class="num">{{ total|num }}</td>
+        <td>{{ l.created_at|localtime('%d %b %Y') }}</td>
+        {% if current_user.can_edit %}
+        <td>
+          <form method="post" action="{{ url_for('contacts.delete_list', list_id=l.id) }}" class="toolbar" style="margin: 0;"
+                onsubmit="return confirm('Delete this list? Its contacts are kept.');">
+            {{ m.csrf() }}
+            {% if total %}<label class="inline"><input type="checkbox" name="confirm" value="yes"> Confirm</label>{% endif %}
+            <button class="btn small danger">Delete</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No lists yet. Lists are also created when you import a CSV.</div>
+  {% endif %}
+</div>
+
+{% if current_user.can_edit %}
+<div class="card" style="max-width: 460px;">
+  <h2>New list</h2>
+  <form method="post" class="toolbar" style="margin: 0;">
+    {{ m.csrf() }}
+    <input type="text" name="name" placeholder="List name" required style="flex: 1;">
+    <button class="btn primary">Create</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Recipients · {{ campaign.name }}{% endblock %}
+{% block content %}
+<h1>Recipients</h1>
+<p class="sub"><a href="{{ url_for('campaigns.report', campaign_id=campaign.id) }}">← {{ campaign.name }}</a></p>
+
+<div class="toolbar">
+  <a class="btn small {{ 'primary' if not filt }}" href="{{ url_for('campaigns.recipients', campaign_id=campaign.id) }}">Everyone</a>
+  {% for f in filters %}
+  <a class="btn small {{ 'primary' if f == filt }}" href="{{ url_for('campaigns.recipients', campaign_id=campaign.id, filter=f) }}">{{ f|replace('_', ' ')|capitalize }}</a>
+  {% endfor %}
+</div>
+
+<div class="card table-wrap">
+  {% if page.items %}
+  <table class="data">
+    <thead><tr><th>Email</th><th>Status</th><th>Delivered</th><th>Opened</th><th>Clicked</th><th>Notes</th></tr></thead>
+    <tbody>
+    {% for msg in page.items %}
+      <tr>
+        <td>{{ msg.email }}</td>
+        <td>
+          {% if msg.complained_at %}<span class="badge red">Complained</span>
+          {% elif msg.bounced_at %}<span class="badge amber">Bounced</span>
+          {% elif msg.status in ('failed', 'skipped') %}<span class="badge red">{{ msg.status|capitalize }}</span>
+          {% elif msg.clicked_at %}<span class="badge green">Clicked</span>
+          {% elif msg.opened_at %}<span class="badge green">Opened</span>
+          {% elif msg.delivered_at %}<span class="badge blue">Delivered</span>
+          {% else %}<span class="badge">{{ msg.status|capitalize }}</span>{% endif %}
+          {% if msg.unsubscribed_at %}<span class="badge">Unsubscribed</span>{% endif %}
+        </td>
+        <td>{{ msg.delivered_at|localtime }}</td>
+        <td>{{ msg.opened_at|localtime }}{% if msg.open_count > 1 %} <span class="hint">×{{ msg.open_count }}</span>{% endif %}</td>
+        <td>{{ msg.clicked_at|localtime }}{% if msg.click_count > 1 %} <span class="hint">×{{ msg.click_count }}</span>{% endif %}</td>
+        <td class="hint">{{ msg.bounce_type or msg.error or '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {{ m.pagination(page, 'campaigns.recipients') }}
+  {% else %}
+  <div class="empty">Nobody here yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block auth %}
+<div class="card">
+  <h1>✉ Mailer</h1>
+  <p class="sub">Log in to continue.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" required autofocus>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required>
+    <label class="inline"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
+    <p><button class="btn primary" style="width: 100%;">Log in</button></p>
+  </form>
+</div>
+{% endblock %}
