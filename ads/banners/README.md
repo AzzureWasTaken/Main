@@ -9,7 +9,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-mcl-*` | (MCL listing) | `mcl.minex.gg` |
 | `minex-mcs-*` | (MCS listing) | `mcs.minex.gg` |
 | `minex-ml-*` | (ML listing) | `ml.minex.gg` |
-| `minex-ml-v2-*` | (ML listing) — **pixel-art redo**, drawn natively | `ml.minex.gg` |
+| `minex-ml-v3-*` | (ML listing) — **sponsored-slot style remake** | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -50,35 +50,40 @@ the same size as the MCL set:
 
 It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), without the Halloween pass.
 
-## ML v2 (pixel-art redo)
+## ML v3 (sponsored-slot style)
 
-`minex-ml-v2-*` is the same banner rebuilt from scratch so it reads as hand-made rather than generated. It is
-drawn natively at 468×60 on a single 2 px grid, with no smoothing, blur or video compression: real Minecraft
-block tiles for each panel (grass, stone and ore, netherrack and animated lava, obsidian), real item sprites,
-the game's own font for the words, a hand-built pixel coin, flat colours and hard 2 px outlines. The brand
-elements are redrawn rather than copied: the coin carries a cyan X, and "MineX" is set in the game font.
-It loops SURVIVAL, PAYOUTS, EVENTS, then the IP, and wraps seamlessly.
+`minex-ml-v3-*` is a remake modelled on the top sponsored slots on Minecraft Buzz (Complex Gaming, ManaCube,
+TalonMC, Craftadia and the rest): each panel is a loud colour field with drifting stripes and sparkles, one big
+headline in a chunky outlined font that punches in, a 3D Minecraft prop sliding in on each side, and a diagonal
+wipe with a white flash between panels. The IP sits above every headline as a kicker, and the last panel is the
+IP itself under "JOIN NOW". The logo block (the MineX coin, the wordmark and the PREMIUM + CRACKED badge) stays
+on a dark plate on the left.
 
-| Rung | fps | Colours | Size |
-|---|---|---|---|
-| `hi` | 15 | 256 | 112 KB |
-| `mid` | 12 | 160 | 92 KB |
-| `lo` | 10 | 96 | 73 KB |
-| `tiny` | 8 | 64 | 60 KB |
-| `936x120-native` (2x) | 15 | 256 | 266 KB |
+| Panel | Colour | Props |
+|---|---|---|
+| SURVIVAL | green | grass block, diamond sword |
+| PAYOUTS | gold | gold block, gold ingot |
+| EVENTS | magenta | TNT, firework rocket, falling confetti |
+| ML.MINEX.GG | blue | two diamond swords |
 
-These are a quarter to a third the size of the other sets, because flat pixel art compresses so well, so they
-fit even a 100 KB cap. Dithering is off (`paletteuse=dither=none`) to keep the colours hard-edged.
+| File | Size |
+|---|---|
+| `468x60-hi` | 571 KB |
+| `468x60-mid` | 416 KB |
+| `468x60-lo` | 294 KB |
+| `468x60-tiny` | 209 KB |
+| `1092x140-native` | 1.9 MB |
+| `1092x140.webm` | 380 KB (the format Minecraft Buzz itself serves) |
 
 ```bash
-python3 -I tools/pixel-banner.py tools/pixel-assets frames ML.MINEX.GG     # 170 PNG frames, 468x60
-ffmpeg -framerate 25 -i frames/f%03d.png \
-  -vf "fps=15,split[a][b];[a]palettegen=max_colors=256:stats_mode=full[p];[b][p]paletteuse=dither=none" \
-  -loop 0 minex-ml-v2-468x60-hi.gif
+python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
+ffmpeg -framerate 25 -i frames/f%03d.png -c:v ffv1 minex-ml-v3-lossless.mkv
+./webm-to-gif.sh minex-ml-v3-lossless.mkv                                    # 468x60 ladder
+W=1092 H=140 ./webm-to-gif.sh minex-ml-v3-lossless.mkv                       # full size
 ```
 
-The third argument is the IP, so a new site is one command, as long as the letters exist in the game font
-(all of them do). The 2x version adds `scale=936:120:flags=neighbor` to the filter.
+The third argument is the IP. Panels, colours and props are the `PANELS` list at the top of
+`tools/sponsor-banner.py`; new props come from `tools/props-3d/`.
 
 ## ML Halloween set
 
