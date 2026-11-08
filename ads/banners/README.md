@@ -8,6 +8,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-mss-*` | minecraftsurvivalservers.net | `mss.minex.gg` |
 | `minex-mcl-*` | (MCL listing) | `mcl.minex.gg` |
 | `minex-mcs-*` | (MCS listing) | `mcs.minex.gg` |
+| `minex-ml-*` | (ML listing) | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -32,6 +33,21 @@ and 468×60 is 7.8:1, so the scale is effectively distortion-free.
 blocked by this environment's network egress proxy, so the ladder covers the
 range those sites typically use (100 KB to 1 MB) rather than their stated
 figure. Check the upload page for the real cap.
+
+## ML set
+
+`minex-ml-*` is the MCL banner with the final panel changed to `ML.MINEX.GG`, and nothing else changed. It is
+the same size as the MCL set:
+
+| Rung | fps | Colours | Size |
+|---|---|---|---|
+| `hi` | 15 | 256 | 425 KB |
+| `mid` | 12 | 160 | 296 KB |
+| `lo` | 10 | 96 | 202 KB |
+| `tiny` | 8 | 64 | 152 KB |
+| `native` (962×124) | 15 | 256 | 1.4 MB |
+
+It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), without the Halloween pass.
 
 ## ML Halloween set
 
