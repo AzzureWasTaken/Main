@@ -3,8 +3,8 @@
 
     python3 -I sponsor-banner.py sponsor-assets OUT_FRAMES_DIR [IP]
 
-ASSETS_DIR holds coin.png (the MineX coin), fonts/ (Bungee, Lilita One as .ttf) and props/ (transparent
-3D renders of Minecraft blocks and items). Draws 170 frames at 1092x140, 25 fps, one seamless loop:
+ASSETS_DIR holds fonts/ (Bungee as .ttf) and props/ (transparent 3D renders of Minecraft blocks and items,
+plus the MineX coin and wordmark rendered the same way). Draws 170 frames at 1092x140, 25 fps, one seamless loop:
 SURVIVAL, PAYOUTS, EVENTS, then the IP. Each panel: a saturated colour field with drifting stripes and
 sparkles, a big outlined headline that punches in, a 3D prop sliding in on each side, a diagonal wipe with a
 white flash between panels. The logo block (coin, wordmark, PREMIUM + CRACKED badge) stays put on the left.
@@ -19,7 +19,7 @@ IP = sys.argv[3] if len(sys.argv) > 3 else 'ML.MINEX.GG'
 W, H, N = 1092, 140, 170
 STARTS = [0, 43, 85, 128]
 WIPE = 7
-BUNGEE = str(A / 'fonts' / 'bungee-400.ttf'); LILITA = str(A / 'fonts' / 'lilita-one-400.ttf')
+BUNGEE = str(A / 'fonts' / 'bungee-400.ttf')
 
 PANELS = [
     dict(word='SURVIVAL', kicker=IP, top=(92, 222, 92), bottom=(22, 140, 52), ink=(10, 52, 18), tint=(226, 255, 214),
@@ -80,15 +80,30 @@ def fit_layer(text, font_path, size, max_w, **kw):
 PROPS = {p: Image.open(A / 'props' / f'{p}.png').convert('RGBA') for p in
          {pp[k][0] for pp in PANELS for k in ('left', 'right')}}
 PROPS = {k: v.crop(v.getbbox()) for k, v in PROPS.items()}
-COIN = Image.open(A / 'coin.png').convert('RGBA')
-COIN = COIN.resize((round(COIN.width * 1.2), round(COIN.height * 1.2)), Image.LANCZOS)
+def outlined(name, size, ink=(18, 10, 4), by='height'):
+    """A 3D render from props/, scaled, with the same dark outline the props get."""
+    im = Image.open(A / 'props' / f'{name}.png').convert('RGBA')
+    im = im.crop(im.getbbox())
+    if by == 'height': im = im.resize((round(im.width * size / im.height), size), Image.LANCZOS)
+    else: im = im.resize((size, round(im.height * size / im.width)), Image.LANCZOS)
+    pad = 6
+    base = Image.new('RGBA', (im.width + 2 * pad, im.height + 2 * pad), (0, 0, 0, 0))
+    a = Image.new('L', base.size, 0); a.paste(im.getchannel('A'), (pad, pad))
+    ring = a.filter(ImageFilter.MaxFilter(7)).point(lambda v: 255 if v > 90 else int(v * 2.8))
+    base.paste(ink + (255,), (0, 0), ring)
+    base.alpha_composite(im, (pad, pad))
+    return base
+
+# the logo, drawn the same way as the props: a voxel gold coin with a diamond-cyan X, and "MineX" as extruded
+# gold voxel letters in the game's font (textures from tools/props-3d/make_logo_textures.py)
+COIN = outlined('minex_coin', 106)
 
 HEAD = []
 for p in PANELS:
     max_w = 520 if p['word'] != IP else 560
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
 KICK = [text_layer(p['kicker'], BUNGEE, 20, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
-WORDMARK = text_layer('MineX', LILITA, 62, top=(255, 255, 255), bottom=(255, 226, 150), ink=(30, 18, 6), stroke=6, shadow_dy=5)
+WORDMARK = outlined('minex_wordmark', 178, by='width')
 
 def badge():
     t = text_layer('PREMIUM + CRACKED', BUNGEE, 15, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)
@@ -210,8 +225,8 @@ def logo_block(img, f):
         sh = Image.composite(sh, Image.new('L', coin.size, 0), coin.getchannel('A'))
         coin = coin.copy(); coin.alpha_composite(Image.merge('RGBA', (Image.new('L', coin.size, 255),) * 3 + (sh,)))
     img.alpha_composite(coin, (12, (H - coin.height) // 2))
-    img.alpha_composite(WORDMARK, (122, 14))
-    img.alpha_composite(BADGE, (126, 14 + WORDMARK.height - 6))
+    img.alpha_composite(WORDMARK, (116, 8))
+    img.alpha_composite(BADGE, (126, 8 + WORDMARK.height + 1))
 
 def render(f):
     cur = max(i for i, s in enumerate(STARTS) if s <= f)

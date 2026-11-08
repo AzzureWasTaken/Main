@@ -30,17 +30,18 @@ function tinted(tex, hex) {             // grass_block_top is grey in the game f
 }
 
 function itemModel(tex, thick = 1) {
-  const c = document.createElement('canvas'); c.width = c.height = 16;
-  const x = c.getContext('2d'); x.drawImage(tex.image, 0, 0, 16, 16);
-  const data = x.getImageData(0, 0, 16, 16).data;
+  const w = tex.image.width, h = tex.image.height;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.drawImage(tex.image, 0, 0, w, h);
+  const data = x.getImageData(0, 0, w, h).data;
   const cells = [];
-  for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
-    const k = (j * 16 + i) * 4; if (data[k + 3] > 100) cells.push([i, j, data[k], data[k + 1], data[k + 2]]);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const k = (j * w + i) * 4; if (data[k + 3] > 100) cells.push([i, j, data[k], data[k + 1], data[k + 2]]);
   }
   const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, thick), new THREE.MeshLambertMaterial({ color: 0xffffff }), cells.length);
   const m = new THREE.Matrix4(), col = new THREE.Color();
   cells.forEach(([i, j, r, g, b], n) => {
-    m.makeTranslation(i + 0.5 - 8, 7.5 - j, 0); mesh.setMatrixAt(n, m);
+    m.makeTranslation(i + 0.5 - w / 2, h / 2 - 0.5 - j, 0); mesh.setMatrixAt(n, m);
     mesh.setColorAt(n, col.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace));
   });
   return mesh;
@@ -66,7 +67,7 @@ scene.add(new THREE.AmbientLight(0xffffff, 1.35));
 const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(-30, 60, 50); scene.add(key);
 const fill = new THREE.DirectionalLight(0xffffff, 0.6); fill.position.set(40, -10, 30); scene.add(fill);
 
-const half = kind === 'block' ? 15.5 : 11.5;
+const half = kind === 'block' ? 15.5 : (q.get('half') ? +q.get('half') : 11.5);
 const cam = new THREE.OrthographicCamera(-half, half, half, -half, 1, 500);
 cam.position.set(0, 0, 100); cam.lookAt(0, 0, 0);
 renderer.render(scene, cam);

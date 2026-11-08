@@ -56,8 +56,9 @@ It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), wit
 TalonMC, Craftadia and the rest): each panel is a loud colour field with drifting stripes and sparkles, one big
 headline in a chunky outlined font that punches in, a 3D Minecraft prop sliding in on each side, and a diagonal
 wipe with a white flash between panels. The IP sits above every headline as a kicker, and the last panel is the
-IP itself under "JOIN NOW". The logo block (the MineX coin, the wordmark and the PREMIUM + CRACKED badge) stays
-on a dark plate on the left.
+IP itself under "JOIN NOW". The logo block stays on a dark plate on the left: a 3D voxel gold coin with a diamond-cyan X and "MineX" as
+extruded gold voxel letters in the game font, drawn the same way as the props
+(`tools/props-3d/make_logo_textures.py`), plus the PREMIUM + CRACKED badge.
 
 | Panel | Colour | Props |
 |---|---|---|
@@ -68,12 +69,12 @@ on a dark plate on the left.
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 562 KB |
-| `468x60-mid` | 405 KB |
-| `468x60-lo` | 284 KB |
-| `468x60-tiny` | 203 KB |
+| `468x60-hi` | 559 KB |
+| `468x60-mid` | 401 KB |
+| `468x60-lo` | 285 KB |
+| `468x60-tiny` | 199 KB |
 | `1092x140-native` | 1.8 MB |
-| `1092x140.webm` | 377 KB (the format Minecraft Buzz itself serves) |
+| `1092x140.webm` | 376 KB (the format Minecraft Buzz itself serves) |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
