@@ -23,11 +23,11 @@ BUNGEE = str(A / 'fonts' / 'bungee-400.ttf'); LILITA = str(A / 'fonts' / 'lilita
 
 PANELS = [
     dict(word='SURVIVAL', kicker=IP, top=(92, 222, 92), bottom=(22, 140, 52), ink=(10, 52, 18), tint=(226, 255, 214),
-         left=('grass_block', 108, 1), right=('diamond_sword', 118, 1)),
+         left=('diamond_sword', 118, -1), right=('diamond_sword', 118, 1)),
     dict(word='PAYOUTS', kicker=IP, top=(255, 200, 40), bottom=(242, 118, 0), ink=(88, 38, 0), tint=(255, 246, 196),
-         left=('gold_block', 108, 1), right=('gold_ingot', 116, 1)),
+         left=('gold_ingot', 116, -1), right=('gold_ingot', 116, 1)),
     dict(word='EVENTS', kicker=IP, top=(244, 92, 226), bottom=(128, 40, 214), ink=(58, 8, 74), tint=(255, 222, 252),
-         left=('tnt', 108, 1), right=('firework_rocket', 120, 1), confetti=True),
+         left=('firework_rocket', 120, -1), right=('firework_rocket', 120, 1), confetti=True),
     dict(word=IP, kicker='JOIN NOW', top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255),
          left=('diamond_sword', 112, -1), right=('diamond_sword', 112, 1)),
 ]

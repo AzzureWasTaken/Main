@@ -61,19 +61,19 @@ on a dark plate on the left.
 
 | Panel | Colour | Props |
 |---|---|---|
-| SURVIVAL | green | grass block, diamond sword |
-| PAYOUTS | gold | gold block, gold ingot |
-| EVENTS | magenta | TNT, firework rocket, falling confetti |
-| ML.MINEX.GG | blue | two diamond swords |
+| SURVIVAL | green | diamond sword, mirrored on both sides |
+| PAYOUTS | gold | gold ingot, mirrored on both sides |
+| EVENTS | magenta | firework rocket, mirrored on both sides, falling confetti |
+| ML.MINEX.GG | blue | diamond sword, mirrored on both sides |
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 571 KB |
-| `468x60-mid` | 416 KB |
-| `468x60-lo` | 294 KB |
-| `468x60-tiny` | 209 KB |
-| `1092x140-native` | 1.9 MB |
-| `1092x140.webm` | 380 KB (the format Minecraft Buzz itself serves) |
+| `468x60-hi` | 562 KB |
+| `468x60-mid` | 405 KB |
+| `468x60-lo` | 284 KB |
+| `468x60-tiny` | 203 KB |
+| `1092x140-native` | 1.8 MB |
+| `1092x140.webm` | 377 KB (the format Minecraft Buzz itself serves) |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
