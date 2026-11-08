@@ -9,6 +9,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-mcl-*` | (MCL listing) | `mcl.minex.gg` |
 | `minex-mcs-*` | (MCS listing) | `mcs.minex.gg` |
 | `minex-ml-*` | (ML listing) | `ml.minex.gg` |
+| `minex-ml-v2-*` | (ML listing) — **pixel-art redo**, drawn natively | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -48,6 +49,36 @@ the same size as the MCL set:
 | `native` (962×124) | 15 | 256 | 1.4 MB |
 
 It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), without the Halloween pass.
+
+## ML v2 (pixel-art redo)
+
+`minex-ml-v2-*` is the same banner rebuilt from scratch so it reads as hand-made rather than generated. It is
+drawn natively at 468×60 on a single 2 px grid, with no smoothing, blur or video compression: real Minecraft
+block tiles for each panel (grass, stone and ore, netherrack and animated lava, obsidian), real item sprites,
+the game's own font for the words, a hand-built pixel coin, flat colours and hard 2 px outlines. The brand
+elements are redrawn rather than copied: the coin carries a cyan X, and "MineX" is set in the game font.
+It loops SURVIVAL, PAYOUTS, EVENTS, then the IP, and wraps seamlessly.
+
+| Rung | fps | Colours | Size |
+|---|---|---|---|
+| `hi` | 15 | 256 | 112 KB |
+| `mid` | 12 | 160 | 92 KB |
+| `lo` | 10 | 96 | 73 KB |
+| `tiny` | 8 | 64 | 60 KB |
+| `936x120-native` (2x) | 15 | 256 | 266 KB |
+
+These are a quarter to a third the size of the other sets, because flat pixel art compresses so well, so they
+fit even a 100 KB cap. Dithering is off (`paletteuse=dither=none`) to keep the colours hard-edged.
+
+```bash
+python3 -I tools/pixel-banner.py tools/pixel-assets frames ML.MINEX.GG     # 170 PNG frames, 468x60
+ffmpeg -framerate 25 -i frames/f%03d.png \
+  -vf "fps=15,split[a][b];[a]palettegen=max_colors=256:stats_mode=full[p];[b][p]paletteuse=dither=none" \
+  -loop 0 minex-ml-v2-468x60-hi.gif
+```
+
+The third argument is the IP, so a new site is one command, as long as the letters exist in the game font
+(all of them do). The 2x version adds `scale=936:120:flags=neighbor` to the filter.
 
 ## ML Halloween set
 
