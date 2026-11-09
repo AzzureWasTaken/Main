@@ -10,7 +10,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-mcs-*` | (MCS listing) | `mcs.minex.gg` |
 | `minex-ml-*` | (ML listing) | `ml.minex.gg` |
 | `minex-ml-v3-*` | (ML listing) — **sponsored-slot style remake** | `ml.minex.gg` |
-| `minex-ml-v4-*` | (ML listing) — **style 3, the information board** | `ml.minex.gg` |
+| `minex-ml-v4-*` | (ML listing) — **style 3, block walls and light rays** | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -87,26 +87,32 @@ W=1092 H=140 ./webm-to-gif.sh minex-ml-v3-lossless.mkv                       # f
 The third argument is the IP. Panels, colours and props are the `PANELS` list at the top of
 `tools/sponsor-banner.py`; new props come from `tools/props-3d/`.
 
-## ML v4 (style 3: the information board)
+## ML v4 (style 3: block walls and light rays)
 
-`minex-ml-v4-*` follows the other kind of Minecraft Buzz sponsored banner, ManaCube and MysticMC: everything on
-screen at once instead of one word per panel. A dark navy board with a gold frame and a faint deepslate texture
-holds, left to right, the voxel MineX coin and wordmark, a PREMIUM / + / CRACKED stat column, the three modes
-stacked in their own colours with 3D item icons (diamond sword, gold ingot, firework), and an IP plate under
-"PLAY NOW". A spotlight runs across the modes in turn (the word pops and gets a shine, its icon wiggles), then
-the IP plate lights up and shines. Loops seamlessly.
+`minex-ml-v4-*` is a sibling of v3 with the same structure (one mode per panel, the same 3D item on both sides,
+the IP as a kicker, the MineX logo block on the left) and its own look, borrowed from other Minecraft Buzz
+banners:
+
+- each panel's background is a wall of that mode's real Minecraft block, tinted and scrolling: grass for
+  SURVIVAL, gold for PAYOUTS, TNT for EVENTS, diamond for the IP
+- light rays rotate behind the headline
+- the headline is gold in Luckiest Guy (a rounder bubbly face) and drops in with a bounce
+- the items spin in, and the kicker sits under the headline as a pill tag
+- panels change with a vertical shutter instead of a diagonal wipe
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 421 KB |
-| `468x60-mid` | 302 KB |
-| `468x60-lo` | 230 KB |
-| `468x60-tiny` | 178 KB |
-| `1092x140-native` | 974 KB |
-| `1092x140.webm` | 162 KB |
+| `468x60-hi` | 680 KB |
+| `468x60-mid` | 511 KB |
+| `468x60-lo` | 362 KB |
+| `468x60-tiny` | 263 KB |
+| `1092x140-native` | 2.3 MB |
+| `1092x140.webm` | 522 KB |
+
+The moving block wall makes it heavier than v3: `mid` is just over a 500 KB cap, so `lo` is the safe default.
 
 ```bash
-python3 -I tools/board-banner.py tools/sponsor-assets frames ML.MINEX.GG
+python3 -I tools/style3-banner.py tools/sponsor-assets frames ML.MINEX.GG
 ```
 then encode as for v3.
 
