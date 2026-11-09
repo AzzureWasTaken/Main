@@ -6,8 +6,10 @@
 Same bones as style 2 (one mode per panel, matching 3D items either side, the IP as a kicker, the MineX logo
 block on the left) but borrowing other Minecraft Buzz banners for the details: each panel's background is a
 wall of that mode's real Minecraft block (grass, gold, TNT, diamond) tinted and scrolling, light rays rotate
-behind the word, the headline is gold in a rounder bubbly face (Luckiest Guy) and drops in with a bounce, the
-items spin in, and panels change with a vertical shutter. 170 frames at 1092x140, 25 fps, one seamless loop.
+behind the word, the headline is gold in a rounder bubbly face (Luckiest Guy) and drops in with a bounce, and
+panels change with a vertical shutter. To set it apart from style 2, the logo block sits on the right, each panel
+has one big 3D block (matching its wall) spinning in on the left instead of a mirrored pair of items, and the
+colours are different (lime, red, indigo, teal). 170 frames at 1092x140, 25 fps, one seamless loop.
 """
 import sys, math, random
 from pathlib import Path
@@ -21,17 +23,15 @@ STARTS = [0, 43, 85, 128]
 WIPE = 7
 BUNGEE = str(A / 'fonts' / 'bungee-400.ttf'); LUCKY = str(A / 'fonts' / 'luckiest-guy-400.ttf')
 
-PANELS = [
-    dict(word='SURVIVAL', kicker=IP, top=(92, 222, 92), bottom=(22, 140, 52), ink=(10, 52, 18), tint=(226, 255, 214), block='grass_block_side',
-         left=('diamond_sword', 118, -1), right=('diamond_sword', 118, 1)),
-    dict(word='PAYOUTS', kicker=IP, top=(255, 200, 40), bottom=(242, 118, 0), ink=(88, 38, 0), tint=(255, 246, 196), block='gold_block',
-         left=('gold_ingot', 116, -1), right=('gold_ingot', 116, 1)),
-    dict(word='EVENTS', kicker=IP, top=(244, 92, 226), bottom=(128, 40, 214), ink=(58, 8, 74), tint=(255, 222, 252), block='tnt_side',
-         left=('firework_rocket', 120, -1), right=('firework_rocket', 120, 1), confetti=True),
-    dict(word=IP, kicker='JOIN NOW', top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255), block='diamond_block',
-         left=('diamond_sword', 112, -1), right=('diamond_sword', 112, 1)),
+PANELS = [   # style 3 colours differ from style 2's; one big 3D block per panel, matching the wall
+    dict(word='SURVIVAL', kicker=IP, top=(196, 236, 60), bottom=(46, 120, 30), ink=(22, 48, 6), block='grass_block_side', prop='grass_block'),
+    dict(word='PAYOUTS', kicker=IP, top=(255, 120, 60), bottom=(176, 24, 30), ink=(70, 6, 10), block='gold_block', prop='gold_block'),
+    dict(word='EVENTS', kicker=IP, top=(120, 92, 255), bottom=(40, 22, 140), ink=(16, 8, 60), block='tnt_side', prop='tnt', confetti=True),
+    dict(word=IP, kicker='JOIN NOW', top=(40, 230, 200), bottom=(10, 110, 130), ink=(4, 44, 50), block='diamond_block', prop='diamond_block'),
 ]
-CENTER = (318, W - 8)                       # area to the right of the logo block
+CENTER = (8, W - 326)                       # area to the left of the logo block (logo sits on the right)
+BLOCK_W = 150                               # strip at the left of CENTER for the big block
+HX = (CENTER[0] + BLOCK_W + CENTER[1]) // 2  # headline centre
 
 def ease_out(t): t = min(max(t, 0), 1); return 1 - (1 - t) ** 3
 def ease_back(t):
@@ -78,7 +78,7 @@ def fit_layer(text, font_path, size, max_w, **kw):
 
 # ------------------------------------------------------------------ static assets
 PROPS = {p: Image.open(A / 'props' / f'{p}.png').convert('RGBA') for p in
-         {pp[k][0] for pp in PANELS for k in ('left', 'right')}}
+         {pp['prop'] for pp in PANELS}}
 PROPS = {k: v.crop(v.getbbox()) for k, v in PROPS.items()}
 def outlined(name, size, ink=(18, 10, 4), by='height'):
     """A 3D render from props/, scaled, with the same dark outline the props get."""
@@ -100,7 +100,7 @@ COIN = outlined('minex_coin', 106)
 
 HEAD = []
 for p in PANELS:
-    max_w = 520 if p['word'] != IP else 560
+    max_w = 470 if p['word'] != IP else 560
     HEAD.append(fit_layer(p['word'], LUCKY, 74, max_w, top=(255, 250, 206), bottom=(255, 168, 16), ink=p['ink'], stroke=6, shadow_dy=6))
 def tag(text, ink):
     t = text_layer(text, BUNGEE, 15, top=(255, 255, 255), bottom=(255, 255, 255), ink=ink, stroke=0, shadow_dy=0)
@@ -138,7 +138,7 @@ def background(i, f):
     img = col * (0.68 + 0.52 * lum)                          # the block's texture, in the panel colour
     img = img * 0.82 + col * 0.18
     # rotating rays behind the headline: 14 rays, a full 1/14 turn per loop, so they wrap
-    cx = (CENTER[0] + CENTER[1]) / 2
+    cx = HX
     ang = np.arctan2(np.arange(H)[:, None] - 70, XX[..., 0] - cx) + 2 * math.pi / 14 * f / N
     ray = (np.sin(ang * 14) > 0.25).astype(np.float32)[..., None]
     dist = np.sqrt(((XX[..., 0] - cx) / 380.0) ** 2 + ((np.arange(H)[:, None] - 70) / 110.0) ** 2)[..., None]
@@ -148,7 +148,7 @@ def background(i, f):
     img = img * (1 - 0.30 * edge)
     return np.clip(img, 0, 255)
 
-SPARKS = [(random.Random(s).uniform(330, W - 20), random.Random(s + 99).uniform(10, H - 10), random.Random(s + 7).randrange(N)) for s in range(16)]
+SPARKS = [(random.Random(s).uniform(20, W - 346), random.Random(s + 99).uniform(10, H - 10), random.Random(s + 7).randrange(N)) for s in range(16)]
 def draw_sparkles(img, f):
     d = ImageDraw.Draw(img)
     for x, y, ph in SPARKS:
@@ -159,7 +159,7 @@ def draw_sparkles(img, f):
         d.polygon([(x, y - s), (x + s * .28, y), (x, y + s), (x - s * .28, y)], fill=(255, 255, 255, a))
         d.polygon([(x - s, y), (x, y - s * .28), (x + s, y), (x, y + s * .28)], fill=(255, 255, 255, a))
 
-CONF = [(random.Random(s).uniform(330, W - 10), random.Random(s + 1).uniform(0, H), random.Random(s + 2).choice([(255, 238, 90), (120, 230, 255), (255, 120, 120), (140, 255, 140), (255, 255, 255)]), random.Random(s + 3).uniform(0, 6.28)) for s in range(36)]
+CONF = [(random.Random(s).uniform(10, W - 336), random.Random(s + 1).uniform(0, H), random.Random(s + 2).choice([(255, 238, 90), (120, 230, 255), (255, 120, 120), (140, 255, 140), (255, 255, 255)]), random.Random(s + 3).uniform(0, 6.28)) for s in range(36)]
 def draw_confetti(img, t):
     d = ImageDraw.Draw(img)
     for x, y0, c, ph in CONF:
@@ -192,21 +192,14 @@ def panel(i, t, f):
     img = Image.fromarray(background(i, f).astype(np.uint8)).convert('RGBA')
     draw_sparkles(img, f)
     if p.get('confetti'): draw_confetti(img, f)
-    cx = (CENTER[0] + CENTER[1]) // 2
-    # props: slide in from outside, then bob and sway
-    slide = 0
+    cx = HX
+    # one big block on the left: spins and grows in, then bobs and turns gently
     grow = ease_back(t / 10) if t < 10 else 1.0
-    for side, sgn in (('left', -1), ('right', 1)):
-        name, hgt, flip = p[side]
-        bob = 5 * math.sin(2 * math.pi * f / 42.5 + (0 if side == 'left' else 2.1))
-        ang = 5 * math.sin(2 * math.pi * f / 85 + (1.2 if side == 'left' else 0)) - sgn * 360 * (1 - ease_out(t / 10))
-        hgt = max(8, int(hgt * max(0.05, grow)))
-        im = prop_image(name, hgt, flip, ang, p['ink'])
-        hw = HEAD[i].width // 2
-        px = cx + sgn * (hw + 18 + im.width // 2) + sgn * slide - im.width // 2
-        px = int(min(max(px, CENTER[0] - 6), W - im.width + 6))
-        py = int((H - im.height) / 2 + bob)
-        img.alpha_composite(im, (px, py)) if 0 <= px <= W else None
+    bob = 4 * math.sin(2 * math.pi * f / 42.5)
+    ang = 6 * math.sin(2 * math.pi * f / 85) + 360 * (1 - ease_out(t / 10))
+    im = prop_image(p['prop'], max(8, int(112 * max(0.05, grow))), 1, ang, p['ink'])
+    bx = CENTER[0] + BLOCK_W // 2 + 22
+    img.alpha_composite(im, (int(bx - im.width / 2), int((H - im.height) / 2 + bob)))
     # kicker
     hd = HEAD[i]
     drop = (1 - ease_back(t / 11)) * -120 if t < 11 else 0
@@ -220,8 +213,8 @@ def panel(i, t, f):
 def logo_block(img, f):
     # dark plate so the logo reads on every colour
     plate = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(plate)
-    d.polygon([(0, 0), (300, 0), (276, H), (0, H)], fill=(12, 10, 20, 205))
-    d.line([(300, 0), (276, H)], fill=(255, 255, 255, 60), width=3)
+    d.polygon([(W - 326, 0), (W, 0), (W, H), (W - 302, H)], fill=(12, 10, 20, 205))
+    d.line([(W - 326, 0), (W - 302, H)], fill=(255, 255, 255, 60), width=3)
     img.alpha_composite(plate)
     coin = COIN
     p = f % 85
@@ -231,9 +224,9 @@ def logo_block(img, f):
         ds.polygon([(x, 0), (x + 16, 0), (x - 24, coin.height), (x - 40, coin.height)], fill=150)
         sh = Image.composite(sh, Image.new('L', coin.size, 0), coin.getchannel('A'))
         coin = coin.copy(); coin.alpha_composite(Image.merge('RGBA', (Image.new('L', coin.size, 255),) * 3 + (sh,)))
-    img.alpha_composite(coin, (12, (H - coin.height) // 2))
-    img.alpha_composite(WORDMARK, (116, 8))
-    img.alpha_composite(BADGE, (126, 8 + WORDMARK.height + 1))
+    img.alpha_composite(coin, (W - 12 - coin.width, (H - coin.height) // 2))
+    img.alpha_composite(WORDMARK, (W - 128 - WORDMARK.width, 8))
+    img.alpha_composite(BADGE, (W - 128 - WORDMARK.width + (WORDMARK.width - BADGE.width) // 2, 8 + WORDMARK.height + 1))
 
 def render(f):
     cur = max(i for i, s in enumerate(STARTS) if s <= f)

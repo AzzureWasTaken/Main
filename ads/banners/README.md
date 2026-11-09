@@ -89,27 +89,25 @@ The third argument is the IP. Panels, colours and props are the `PANELS` list at
 
 ## ML v4 (style 3: block walls and light rays)
 
-`minex-ml-v4-*` is a sibling of v3 with the same structure (one mode per panel, the same 3D item on both sides,
-the IP as a kicker, the MineX logo block on the left) and its own look, borrowed from other Minecraft Buzz
-banners:
+`minex-ml-v4-*` keeps v3's idea (one mode per panel, the IP as a kicker) with its own look and layout:
 
-- each panel's background is a wall of that mode's real Minecraft block, tinted and scrolling: grass for
-  SURVIVAL, gold for PAYOUTS, TNT for EVENTS, diamond for the IP
+- the MineX logo block sits on the **right**, on a plate slanting the other way
+- one big **3D block** spins in on the left of each panel, matching the panel's wall: grass, gold, TNT, diamond
+- each panel's background is a scrolling wall of that block, tinted in the panel colour
 - light rays rotate behind the headline
 - the headline is gold in Luckiest Guy (a rounder bubbly face) and drops in with a bounce
-- the items spin in, and the kicker sits under the headline as a pill tag
-- panels change with a vertical shutter instead of a diagonal wipe
+- the kicker sits under the headline as a pill tag
+- its own colours: lime, red, indigo and teal
+- panels change with a vertical shutter
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 680 KB |
-| `468x60-mid` | 511 KB |
-| `468x60-lo` | 362 KB |
-| `468x60-tiny` | 263 KB |
-| `1092x140-native` | 2.3 MB |
-| `1092x140.webm` | 522 KB |
-
-The moving block wall makes it heavier than v3: `mid` is just over a 500 KB cap, so `lo` is the safe default.
+| `468x60-hi` | 659 KB |
+| `468x60-mid` | 489 KB |
+| `468x60-lo` | 336 KB |
+| `468x60-tiny` | 242 KB |
+| `1092x140-native` | 2.1 MB |
+| `1092x140.webm` | 455 KB |
 
 ```bash
 python3 -I tools/style3-banner.py tools/sponsor-assets frames ML.MINEX.GG
