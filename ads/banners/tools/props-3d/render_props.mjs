@@ -16,7 +16,7 @@ const PROPS = {
   nether_star: 'kind=item&tex=nether_star&ry=-0.4',
   golden_apple: 'kind=item&tex=golden_apple&ry=-0.5',
   totem_of_undying: 'kind=item&tex=totem_of_undying&ry=-0.5',
-  minex_coin: 'kind=item&tex=minex_coin&ry=-0.35&thick=2.4&half=22',
+  minex_coin: 'kind=item&tex=minex_coin&ry=-0.35&thick=3.2&half=29.5',
   minex_wordmark: 'kind=item&tex=minex_wordmark&ry=-0.2&rx=0.1&thick=2&half=19',
 };
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] });
