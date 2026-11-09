@@ -2,7 +2,7 @@
 """Pixel-art textures for the MineX logo, in Minecraft's own gold and diamond palettes, so the logo can be
 rendered as 3D voxel items like the banner's other props.
 
-    python3 -I make_logo_textures.py PTEX_DIR      # writes minex_coin.png (16x16) and minex_wordmark.png
+    python3 -I make_logo_textures.py PTEX_DIR      # writes minex_coin.png (36x36) and minex_wordmark.png
 """
 import sys, math
 from pathlib import Path
@@ -13,37 +13,49 @@ D = Path(sys.argv[1])
 G = [(255, 253, 224), (253, 245, 95), (250, 214, 74), (233, 177, 21), (220, 150, 19), (178, 100, 17), (117, 40, 2)]  # gold_ingot.png
 C = [(213, 255, 246), (161, 251, 232), (74, 237, 217), (32, 197, 181), (17, 114, 122)]                              # diamond.png
 
-# --- coin: 16x16, outlined rim, bevelled face, cyan X
-coin = np.zeros((16, 16, 4), np.uint8)
-inside = np.array([[math.hypot(i - 7.5, j - 7.5) <= 7.3 for i in range(16)] for j in range(16)])
-for j in range(16):
-    for i in range(16):
+# --- coin: 36x36, outlined rim, bevelled face, "MineX" across it in diamond cyan (game font)
+font = np.asarray(Image.open(D / 'ascii.png').convert('RGBA'))[..., 3] > 0
+def glyph(ch):
+    r, c = ord(ch) // 16, ord(ch) % 16
+    cell = font[r * 8:(r + 1) * 8, c * 8:(c + 1) * 8]
+    cols = np.where(cell.any(axis=0))[0]
+    return cell[:7, :cols.max() + 1]
+N = 36; R = N / 2 - 0.5
+coin = np.zeros((N, N, 4), np.uint8)
+inside = np.array([[math.hypot(i - R, j - R) <= R - 0.2 for i in range(N)] for j in range(N)])
+for j in range(N):
+    for i in range(N):
         if not inside[j, i]: continue
-        d = math.hypot(i - 7.5, j - 7.5); s = i + j
-        edge = any(not (0 <= j + dj < 16 and 0 <= i + di < 16 and inside[j + dj, i + di]) for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+        d = math.hypot(i - R, j - R); s = (i + j) / (2 * R)
+        edge = any(not (0 <= j + dj < N and 0 <= i + di < N and inside[j + dj, i + di]) for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)))
         if edge: c = G[6]
-        elif d > 5.5: c = G[2] if s < 13 else (G[5] if s > 17 else G[4])
+        elif d > R - 3: c = G[2] if s < .8 else (G[5] if s > 1.2 else G[4])          # rim
+        elif d > R - 4: c = G[4]                                                      # inner groove
         else:
             c = G[1]
-            if d > 4.3 and s < 12: c = G[0]
-            if d > 4.3 and s > 18: c = G[3]
+            if s < .55 and d > R - 8: c = G[0]
+            if s > 1.4 and d > R - 8: c = G[3]
         coin[j, i] = (*c, 255)
-xm = np.zeros((16, 16), bool)                        # bold X: two-texel diagonals
-for k in range(6):
-    for (i, j) in ((4 + k, 5 + k), (5 + k, 5 + k), (11 - k, 5 + k), (10 - k, 5 + k)):
-        xm[j, i] = True
-edge = np.zeros_like(xm)
-for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1)):
-    edge |= np.roll(np.roll(xm, dj, 0), di, 1)
-edge &= ~xm & (coin[..., 3] > 0) & ~(np.array([[1 if tuple(coin[j, i, :3]) == G[6] else 0 for i in range(16)] for j in range(16)], bool))
-coin[edge, :3] = C[4]
-for j in range(16):
-    for i in range(16):
-        if xm[j, i]: coin[j, i, :3] = C[1] if j < 7 else C[2]
+parts = []
+for ch in 'MineX':
+    parts += [glyph(ch), np.zeros((7, 1), bool)]
+txt = np.concatenate(parts[:-1], axis=1)                                             # 25 x 7
+th, tw = txt.shape; x0 = (N - tw) // 2; y0 = (N - th) // 2
+m = np.zeros((N, N), bool); m[y0:y0 + th, x0:x0 + tw] = txt
+ring = m.copy()
+for dy in (-1, 0, 1):
+    for dx in (-1, 0, 1):
+        ring |= np.roll(np.roll(m, dy, 0), dx, 1)
+sh = np.roll(np.roll(ring, 1, 0), 1, 1)
+coin[sh & ~ring & (coin[..., 3] > 0), :3] = G[5]                                     # drop shadow on the gold
+coin[ring & ~m, :3] = C[4]                                                           # dark-teal outline
+rows = [C[0], C[1], C[1], C[2], C[2], C[3], C[3]]
+for y in range(th):
+    for x in range(tw):
+        if txt[y, x]: coin[y0 + y, x0 + x, :3] = rows[y]
 Image.fromarray(coin, 'RGBA').save(D / 'minex_coin.png')
 
 # --- wordmark: "MineX" in the game font, gold rows, 1-texel dark outline
-font = np.asarray(Image.open(D / 'ascii.png').convert('RGBA'))[..., 3] > 0
 def glyph(ch):
     r, c = ord(ch) // 16, ord(ch) % 16
     cell = font[r * 8:(r + 1) * 8, c * 8:(c + 1) * 8]
