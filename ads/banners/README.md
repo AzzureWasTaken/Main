@@ -55,7 +55,7 @@ It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), wit
 
 `minex-ml-v3-*` is a remake modelled on the top sponsored slots on Minecraft Buzz (Complex Gaming, ManaCube,
 TalonMC, Craftadia and the rest): each panel is a loud colour field with drifting stripes and sparkles, one big
-headline in a chunky outlined font that punches in, a 3D Minecraft prop sliding in on each side, and a diagonal
+headline in a chunky outlined font that drops in with a bounce, a 3D Minecraft prop sliding in on each side, and a diagonal
 wipe with a white flash between panels. The IP sits above every headline as a kicker, and the last panel is the
 IP itself under "JOIN NOW". The logo block stays on a dark plate on the left: a 3D voxel gold coin with "MineX" across it in chunky cyan-to-purple pixel letters, "MineX" as
 extruded gold voxel letters in the game font, drawn the same way as the props
@@ -70,12 +70,12 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 559 KB |
-| `468x60-mid` | 402 KB |
-| `468x60-lo` | 285 KB |
-| `468x60-tiny` | 198 KB |
+| `468x60-hi` | 561 KB |
+| `468x60-mid` | 407 KB |
+| `468x60-lo` | 289 KB |
+| `468x60-tiny` | 206 KB |
 | `1092x140-native` | 1.8 MB |
-| `1092x140.webm` | 379 KB (the format Minecraft Buzz itself serves) |
+| `1092x140.webm` | 328 KB (the format Minecraft Buzz itself serves) |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140

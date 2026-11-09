@@ -6,7 +6,7 @@
 ASSETS_DIR holds fonts/ (Bungee as .ttf) and props/ (transparent 3D renders of Minecraft blocks and items,
 plus the MineX coin and wordmark rendered the same way). Draws 170 frames at 1092x140, 25 fps, one seamless loop:
 SURVIVAL, PAYOUTS, EVENTS, then the IP. Each panel: a saturated colour field with drifting stripes and
-sparkles, a big outlined headline that punches in, a 3D prop sliding in on each side, a diagonal wipe with a
+sparkles, a big outlined headline that drops in with a bounce, a 3D prop sliding in on each side, a diagonal wipe with a
 white flash between panels. The logo block (coin, wordmark, PREMIUM + CRACKED badge) stays put on the left.
 """
 import sys, math, random
@@ -199,14 +199,10 @@ def panel(i, t, f):
     k = KICK[i]
     ky = 4 - (1 - ease_out((t - 2) / 7)) * 40 if t >= 2 else -60
     img.alpha_composite(k, (cx - k.width // 2, int(ky))) if ky > -k.height else None
-    # headline punch-in
-    s = 1.0 if t >= 10 else 1.6 - 0.6 * ease_back(t / 10)
+    # headline drops in from above with a bounce (same move as style 3)
     hd = HEAD[i]
-    if s != 1.0: hd = hd.resize((max(1, round(hd.width * s)), max(1, round(hd.height * s))), Image.LANCZOS)
-    a = min(1, (t + 1) / 3)
-    if a < 1:
-        hd = hd.copy(); hd.putalpha(hd.getchannel('A').point(lambda v: int(v * a)))
-    hy = 74 - hd.height // 2 + 6
+    drop = (1 - ease_back(t / 11)) * -120 if t < 11 else 0
+    hy = int(74 - hd.height // 2 + 6 + drop)
     img.alpha_composite(hd, (cx - hd.width // 2, hy))
     return img
 
