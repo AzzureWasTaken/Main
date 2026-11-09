@@ -11,6 +11,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-ml-*` | (ML listing) | `ml.minex.gg` |
 | `minex-ml-v3-*` | (ML listing) — **sponsored-slot style remake** | `ml.minex.gg` |
 | `minex-ml-v4-*` | (ML listing) — **style 3, block walls and light rays** | `ml.minex.gg` |
+| `minex-ml-v5-*` | (ML listing) — **style 4, BlossomCraft format** | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -111,6 +112,32 @@ The third argument is the IP. Panels, colours and props are the `PANELS` list at
 
 ```bash
 python3 -I tools/style3-banner.py tools/sponsor-assets frames ML.MINEX.GG
+```
+then encode as for v3.
+
+## ML v5 (style 4: BlossomCraft format)
+
+`minex-ml-v5-*` copies the format of the BlossomCraft banner on Minecraft Buzz. Full bleed, no logo plate; each
+panel is one bright colour (orange, pink, lilac, cyan) with a broad darker swirl turning behind it.
+
+- Panel 1 is the brand line-up, like BlossomCraft's "1.21 | logo | JAVA + BEDROCK CROSSPLAY": the MineX coin, the
+  voxel MineX wordmark, then PREMIUM + CRACKED over the IP.
+- Panels 2-4 are a thin kicker over a huge bold white word (Montserrat), with a Minecraft character bust each
+  side: BUILD, EXPLORE & / SURVIVAL (Steve, Alex), GRIND FOR REAL / PAYOUTS (Kai, Sunny), COMPETE IN / EVENTS
+  (Makena, Zuri). The busts are 3D renders of the game's default skins (`tools/props-3d/busts/`).
+- Between panels the giant MineX coin sweeps across and reveals the next panel; text zooms in out of a blur and
+  the busts pop up from the bottom edge.
+
+| File | Size |
+|---|---|
+| `468x60-hi` | 555 KB |
+| `468x60-mid` | 400 KB |
+| `468x60-lo` | 290 KB |
+| `468x60-tiny` | 209 KB |
+| `1092x140-native` | 1.9 MB |
+
+```bash
+python3 -I tools/blossom-banner.py tools/sponsor-assets frames ML.MINEX.GG
 ```
 then encode as for v3.
 
