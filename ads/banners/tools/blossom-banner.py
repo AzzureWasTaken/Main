@@ -6,9 +6,9 @@
 Full bleed, no logo plate. Each panel is one bright colour with a big darker swirl pattern turning slowly
 behind everything. Panel 1 is the brand line-up (as BlossomCraft's "1.21 | logo | JAVA + BEDROCK CROSSPLAY"):
 the MineX coin on the left, the voxel MineX wordmark in the middle, PREMIUM + CRACKED over the IP on the right.
-Panels 2-4 are a thin kicker over a huge bold white word, with a Minecraft character bust peeking in on each
+Panels 2-4 are a thin kicker over a huge bold white word, with the panel's 3D Minecraft item mirrored on each
 side. Between panels the giant MineX coin sweeps across the banner and the new panel is revealed behind it;
-text zooms in out of a blur and the busts pop up from the bottom edge. 170 frames, 1092x140, 25 fps, one loop.
+text zooms in out of a blur and the items pop up from the bottom edge. 170 frames, 1092x140, 25 fps, one loop.
 """
 import sys, math
 from pathlib import Path
@@ -24,9 +24,9 @@ M9 = str(A / 'fonts' / 'montserrat-900.ttf'); M6 = str(A / 'fonts' / 'montserrat
 
 PANELS = [  # base colour, swirl-line colour
     dict(kind='brand', base=(248, 142, 52), line=(206, 64, 40)),
-    dict(kind='word', kicker='BUILD, EXPLORE &', word='SURVIVAL', base=(240, 150, 192), line=(120, 44, 96), busts=('steve', 'alex')),
-    dict(kind='word', kicker='GRIND FOR REAL', word='PAYOUTS', base=(172, 152, 232), line=(92, 70, 164), busts=('kai', 'sunny')),
-    dict(kind='word', kicker='COMPETE IN', word='EVENTS', base=(92, 204, 232), line=(36, 108, 170), busts=('makena', 'zuri')),
+    dict(kind='word', kicker='BUILD, EXPLORE &', word='SURVIVAL', base=(240, 150, 192), line=(120, 44, 96), item='diamond_sword'),
+    dict(kind='word', kicker='GRIND FOR REAL', word='PAYOUTS', base=(172, 152, 232), line=(92, 70, 164), item='gold_ingot'),
+    dict(kind='word', kicker='COMPETE IN', word='EVENTS', base=(92, 204, 232), line=(36, 108, 170), item='firework_rocket'),
 ]
 
 def ease_out(t): t = min(max(t, 0), 1); return 1 - (1 - t) ** 3
@@ -75,12 +75,11 @@ BRAND_IP = fit(IP, M9, 40, 300)
 KICK = [text(p['kicker'], M6, 24, alpha=235) if p['kind'] == 'word' else None for p in PANELS]
 WORD = [fit(p['word'], M9, 82, 560) if p['kind'] == 'word' else None for p in PANELS]
 
-def bust(name, height, face_left):
-    im = Image.open(A / 'busts' / f'{name}.png').convert('RGBA'); im = im.crop(im.getbbox())
-    im = im.resize((round(im.width * height / im.height), height), Image.LANCZOS)
-    im = outlined(im, ink=(34, 16, 34), r=3)
-    return ImageOps.mirror(im) if face_left else im
-BUSTS = [(bust(p['busts'][0], 158, False), bust(p['busts'][1], 158, True)) if p['kind'] == 'word' else None for p in PANELS]
+def item_pair(name, height):
+    """The panel's 3D item, outlined, as a mirrored pair: the left one faces right, the right one faces left."""
+    im = outlined(prop(name, height), ink=(34, 16, 34), r=3)
+    return ImageOps.mirror(im), im
+ITEMS = [item_pair(p['item'], 112) if p['kind'] == 'word' else None for p in PANELS]
 
 # ------------------------------------------------------------------ background: colour + turning swirl
 YY, XX = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -126,14 +125,14 @@ def panel(i, t, f):
         top = zoom_in(BRAND_TOP, (t - 6) / 7); ipl = zoom_in(BRAND_IP, (t - 7) / 7)
         put_center(img, top, 920, 48); put_center(img, ipl, 920, 86)
     else:
-        L, Rb = BUSTS[i]
+        L, Rb = ITEMS[i]
         rise = (1 - ease_back((t - 3) / 9)) * 150 if t < 12 else 0
-        gap = WORD[i].width / 2 + 72
+        gap = WORD[i].width / 2 + 78
         for k, (b, x) in enumerate(((L, W / 2 - gap), (Rb, W / 2 + gap))):
             bob = 3 * math.sin(2 * math.pi * f / 42.5 + k * 2.2)
-            ang = 2.5 * math.sin(2 * math.pi * f / 85 + k)
+            ang = 6 * math.sin(2 * math.pi * f / 85 + k)
             bb = b.rotate(ang, resample=Image.BICUBIC, expand=True)
-            img.alpha_composite(bb, (int(x - bb.width / 2), int(H - bb.height + 34 + rise + bob)))
+            img.alpha_composite(bb, (int(x - bb.width / 2), int((H - bb.height) / 2 + 4 + rise + bob)))
         put_center(img, zoom_in(KICK[i], (t - 4) / 7), W / 2, 24)
         put_center(img, zoom_in(WORD[i], (t - 5) / 7), W / 2, 82)
     return img

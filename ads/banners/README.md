@@ -122,19 +122,19 @@ panel is one bright colour (orange, pink, lilac, cyan) with a broad darker swirl
 
 - Panel 1 is the brand line-up, like BlossomCraft's "1.21 | logo | JAVA + BEDROCK CROSSPLAY": the MineX coin, the
   voxel MineX wordmark, then PREMIUM + CRACKED over the IP.
-- Panels 2-4 are a thin kicker over a huge bold white word (Montserrat), with a Minecraft character bust each
-  side: BUILD, EXPLORE & / SURVIVAL (Steve, Alex), GRIND FOR REAL / PAYOUTS (Kai, Sunny), COMPETE IN / EVENTS
-  (Makena, Zuri). The busts are 3D renders of the game's default skins (`tools/props-3d/busts/`).
+- Panels 2-4 are a thin kicker over a huge bold white word (Montserrat), with the panel's 3D Minecraft item
+  mirrored each side, as in the other styles: BUILD, EXPLORE & / SURVIVAL (diamond swords), GRIND FOR REAL /
+  PAYOUTS (gold ingots), COMPETE IN / EVENTS (fireworks).
 - Between panels the giant MineX coin sweeps across and reveals the next panel; text zooms in out of a blur and
-  the busts pop up from the bottom edge.
+  the items pop up from the bottom edge.
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 555 KB |
-| `468x60-mid` | 400 KB |
-| `468x60-lo` | 290 KB |
-| `468x60-tiny` | 209 KB |
-| `1092x140-native` | 1.9 MB |
+| `468x60-hi` | 552 KB |
+| `468x60-mid` | 386 KB |
+| `468x60-lo` | 276 KB |
+| `468x60-tiny` | 199 KB |
+| `1092x140-native` | 1.8 MB |
 
 ```bash
 python3 -I tools/blossom-banner.py tools/sponsor-assets frames ML.MINEX.GG
