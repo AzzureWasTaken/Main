@@ -57,7 +57,7 @@ for y in range(th):
     for x in range(tw):
         if txt[y, x]:
             c = grad[y]
-            if y == 0 or not txt[y - 1, x]: c = (232, 255, 252)                       # top-edge highlight
+            if y < th // 2 and (y == 0 or not txt[y - 1, x]): c = (232, 255, 252)     # top-edge highlight, upper half only
             coin[y0 + y, x0 + x, :3] = c
 Image.fromarray(coin, 'RGBA').save(D / 'minex_coin.png')
 

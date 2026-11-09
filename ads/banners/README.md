@@ -70,7 +70,7 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 561 KB |
+| `468x60-hi` | 560 KB |
 | `468x60-mid` | 407 KB |
 | `468x60-lo` | 289 KB |
 | `468x60-tiny` | 206 KB |
@@ -105,7 +105,7 @@ The third argument is the IP. Panels, colours and props are the `PANELS` list at
 | `468x60-hi` | 659 KB |
 | `468x60-mid` | 489 KB |
 | `468x60-lo` | 336 KB |
-| `468x60-tiny` | 242 KB |
+| `468x60-tiny` | 240 KB |
 | `1092x140-native` | 2.1 MB |
 | `1092x140.webm` | 455 KB |
 
