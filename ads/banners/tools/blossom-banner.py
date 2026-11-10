@@ -23,10 +23,10 @@ SWEEP = 10                                   # frames the coin takes to cross
 M9 = str(A / 'fonts' / 'montserrat-900.ttf'); M6 = str(A / 'fonts' / 'montserrat-600.ttf')
 
 PANELS = [  # base colour, swirl-line colour
-    dict(kind='brand', base=(248, 142, 52), line=(206, 64, 40)),
-    dict(kind='word', kicker='BUILD, EXPLORE &', word='SURVIVAL', base=(240, 150, 192), line=(120, 44, 96), item='diamond_sword'),
-    dict(kind='word', kicker='GRIND FOR REAL', word='PAYOUTS', base=(172, 152, 232), line=(92, 70, 164), item='gold_ingot'),
-    dict(kind='word', kicker='COMPETE IN', word='EVENTS', base=(92, 204, 232), line=(36, 108, 170), item='firework_rocket'),
+    dict(kind='brand', base=(248, 142, 52), line=(206, 64, 40), float=('diamond', 'emerald', 'gold_ingot')),
+    dict(kind='word', kicker='BUILD, EXPLORE &', word='SURVIVAL', base=(240, 150, 192), line=(120, 44, 96), item='diamond_sword', float=('grass_block', 'nether_star', 'diamond')),
+    dict(kind='word', kicker='GRIND FOR REAL', word='PAYOUTS', base=(172, 152, 232), line=(92, 70, 164), item='gold_ingot', float=('emerald', 'diamond', 'gold_block')),
+    dict(kind='word', kicker='COMPETE IN', word='EVENTS', base=(92, 204, 232), line=(36, 108, 170), item='firework_rocket', float=('tnt', 'nether_star', 'firework_rocket')),
 ]
 
 def ease_out(t): t = min(max(t, 0), 1); return 1 - (1 - t) ** 3
@@ -67,19 +67,19 @@ def outlined(im, ink=(40, 14, 6), r=5):
     base.alpha_composite(im, (pad, pad))
     return base
 
-COIN = outlined(prop('minex_coin', 112))
-WORDMARK = outlined(prop('minex_wordmark', 380, by='width'))
+COIN = outlined(prop('minex_coin', 128))
+WORDMARK = outlined(prop('minex_wordmark', 400, by='width'))
 SWEEP_COIN = prop('minex_coin', 300)
-BRAND_TOP = text('PREMIUM + CRACKED', M9, 22)
-BRAND_IP = fit(IP, M9, 40, 300)
+BRAND_TOP = text('PREMIUM + CRACKED', M9, 25)
+BRAND_IP = fit(IP, M9, 46, 330)
 KICK = [text(p['kicker'], M6, 24, alpha=235) if p['kind'] == 'word' else None for p in PANELS]
-WORD = [fit(p['word'], M9, 82, 560) if p['kind'] == 'word' else None for p in PANELS]
+WORD = [fit(p['word'], M9, 96, 620) if p['kind'] == 'word' else None for p in PANELS]
 
 def item_pair(name, height):
     """The panel's 3D item, outlined, as a mirrored pair: the left one faces right, the right one faces left."""
     im = outlined(prop(name, height), ink=(34, 16, 34), r=3)
     return ImageOps.mirror(im), im
-ITEMS = [item_pair(p['item'], 112) if p['kind'] == 'word' else None for p in PANELS]
+ITEMS = [item_pair(p['item'], 136) if p['kind'] == 'word' else None for p in PANELS]
 
 # ------------------------------------------------------------------ background: colour + turning swirl
 YY, XX = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -99,6 +99,26 @@ def background(i, f):
     img = img * (1 - 0.22 * edge)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).convert('RGBA')
 
+FLOAT_SPOTS = [(48, 34, 52, 0.0), (150, 104, 40, 2.1), (1044, 36, 48, 1.0), (946, 110, 40, 3.3), (250, 22, 30, 4.4), (842, 20, 30, 5.2)]
+FLOAT_CACHE = {}
+def floaters(img, i, f, t):
+    """Small themed items drifting in the outer thirds, behind the main content."""
+    names = PANELS[i]['float']
+    pop = min(1, max(0, (t - 2) / 8))
+    for k, (x, y, size, ph) in enumerate(FLOAT_SPOTS):
+        if PANELS[i]['kind'] == 'brand' and x > 200: continue
+        name = names[k % len(names)]
+        key = (name, size)
+        if key not in FLOAT_CACHE: FLOAT_CACHE[key] = outlined(prop(name, size), ink=(34, 16, 34), r=2)
+        im = FLOAT_CACHE[key]
+        ang = 14 * math.sin(2 * math.pi * f / 85 + ph)
+        im = im.rotate(ang, resample=Image.BICUBIC, expand=True)
+        if pop < 1:
+            im = im.resize((max(1, int(im.width * ease_back(pop))), max(1, int(im.height * ease_back(pop)))), Image.LANCZOS) if pop > 0 else None
+        if im is None: continue
+        dy = 6 * math.sin(2 * math.pi * f / 56.67 + ph)
+        put_center(img, im, x, y + dy)
+
 def zoom_in(layer, u):
     """Text entering: from 1.45x and blurred to sharp and 1x as u goes 0..1."""
     u = min(max(u, 0), 1)
@@ -115,26 +135,27 @@ def put_center(img, layer, cx, cy):
 def panel(i, t, f):
     p = PANELS[i]
     img = background(i, f)
+    floaters(img, i, f, t)
     u = (t - 4) / 7                                                # entry animation clock
     if p['kind'] == 'brand':
         bob = 3 * math.sin(2 * math.pi * f / 42.5)
         c = zoom_in(COIN, u)
-        put_center(img, c, 150, 70 + bob)
+        put_center(img, c, 110, 70 + bob)
         wm = zoom_in(WORDMARK, (t - 5) / 7)
-        put_center(img, wm, W / 2, 70)
+        put_center(img, wm, 480, 70)
         top = zoom_in(BRAND_TOP, (t - 6) / 7); ipl = zoom_in(BRAND_IP, (t - 7) / 7)
-        put_center(img, top, 920, 48); put_center(img, ipl, 920, 86)
+        put_center(img, top, 900, 44); put_center(img, ipl, 900, 88)
     else:
         L, Rb = ITEMS[i]
         rise = (1 - ease_back((t - 3) / 9)) * 150 if t < 12 else 0
-        gap = WORD[i].width / 2 + 78
+        gap = WORD[i].width / 2 + 96
         for k, (b, x) in enumerate(((L, W / 2 - gap), (Rb, W / 2 + gap))):
             bob = 3 * math.sin(2 * math.pi * f / 42.5 + k * 2.2)
             ang = 6 * math.sin(2 * math.pi * f / 85 + k)
             bb = b.rotate(ang, resample=Image.BICUBIC, expand=True)
             img.alpha_composite(bb, (int(x - bb.width / 2), int((H - bb.height) / 2 + 4 + rise + bob)))
         put_center(img, zoom_in(KICK[i], (t - 4) / 7), W / 2, 24)
-        put_center(img, zoom_in(WORD[i], (t - 5) / 7), W / 2, 82)
+        put_center(img, zoom_in(WORD[i], (t - 5) / 7), W / 2, 84)
     return img
 
 def render(f):

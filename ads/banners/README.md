@@ -125,16 +125,18 @@ panel is one bright colour (orange, pink, lilac, cyan) with a broad darker swirl
 - Panels 2-4 are a thin kicker over a huge bold white word (Montserrat), with the panel's 3D Minecraft item
   mirrored each side, as in the other styles: BUILD, EXPLORE & / SURVIVAL (diamond swords), GRIND FOR REAL /
   PAYOUTS (gold ingots), COMPETE IN / EVENTS (fireworks).
+- Small themed items (diamonds, emeralds, nether stars, gold and TNT blocks) drift in the outer corners to fill
+  the width, and the headline and items are sized up.
 - Between panels the giant MineX coin sweeps across and reveals the next panel; text zooms in out of a blur and
   the items pop up from the bottom edge.
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 552 KB |
-| `468x60-mid` | 386 KB |
-| `468x60-lo` | 276 KB |
-| `468x60-tiny` | 199 KB |
-| `1092x140-native` | 1.8 MB |
+| `468x60-hi` | 669 KB |
+| `468x60-mid` | 467 KB |
+| `468x60-lo` | 345 KB |
+| `468x60-tiny` | 248 KB |
+| `1092x140-native` | 2.3 MB |
 
 ```bash
 python3 -I tools/blossom-banner.py tools/sponsor-assets frames ML.MINEX.GG
