@@ -8,10 +8,7 @@ cycle SURVIVAL → PAYOUTS → EVENTS → the listing's tracking IP.
 | `minex-mss-*` | minecraftsurvivalservers.net | `mss.minex.gg` |
 | `minex-mcl-*` | (MCL listing) | `mcl.minex.gg` |
 | `minex-mcs-*` | (MCS listing) | `mcs.minex.gg` |
-| `minex-ml-*` | (ML listing) | `ml.minex.gg` |
 | `minex-ml-v3-*` | (ML listing) — **sponsored-slot style remake** | `ml.minex.gg` |
-| `minex-ml-v4-*` | (ML listing) — **style 3, block walls and light rays** | `ml.minex.gg` |
-| `minex-ml-v5-*` | (ML listing) — **style 4, BlossomCraft format** | `ml.minex.gg` |
 | `minex-ml-halloween-*` | (ML listing) — **Halloween version** | `ml.minex.gg` |
 
 ## Pick by the site's upload cap
@@ -36,21 +33,6 @@ and 468×60 is 7.8:1, so the scale is effectively distortion-free.
 blocked by this environment's network egress proxy, so the ladder covers the
 range those sites typically use (100 KB to 1 MB) rather than their stated
 figure. Check the upload page for the real cap.
-
-## ML set
-
-`minex-ml-*` is the MCL banner with the final panel changed to `ML.MINEX.GG`, and nothing else changed. It is
-the same size as the MCL set:
-
-| Rung | fps | Colours | Size |
-|---|---|---|---|
-| `hi` | 15 | 256 | 425 KB |
-| `mid` | 12 | 160 | 296 KB |
-| `lo` | 10 | 96 | 202 KB |
-| `tiny` | 8 | 64 | 152 KB |
-| `native` (962×124) | 15 | 256 | 1.4 MB |
-
-It is the Halloween set's steps up to the IP swap (`tools/swap-ip-text.py`), without the Halloween pass.
 
 ## ML v3 (sponsored-slot style)
 
@@ -87,61 +69,6 @@ W=1092 H=140 ./webm-to-gif.sh minex-ml-v3-lossless.mkv                       # f
 
 The third argument is the IP. Panels, colours and props are the `PANELS` list at the top of
 `tools/sponsor-banner.py`; new props come from `tools/props-3d/`.
-
-## ML v4 (style 3: block walls and light rays)
-
-`minex-ml-v4-*` keeps v3's idea (one mode per panel, the IP as a kicker) with its own look and layout:
-
-- the MineX logo block sits on the **right**, on a plate slanting the other way
-- one big **3D block** spins in on the left of each panel, matching the panel's wall: grass, gold, TNT, diamond
-- each panel's background is a scrolling wall of that block, tinted in the panel colour
-- light rays rotate behind the headline
-- the headline is gold in Luckiest Guy (a rounder bubbly face) and drops in with a bounce
-- the kicker sits under the headline as a pill tag
-- its own colours: lime, red, indigo and teal
-- panels change with a vertical shutter
-
-| File | Size |
-|---|---|
-| `468x60-hi` | 659 KB |
-| `468x60-mid` | 489 KB |
-| `468x60-lo` | 336 KB |
-| `468x60-tiny` | 240 KB |
-| `1092x140-native` | 2.1 MB |
-| `1092x140.webm` | 455 KB |
-
-```bash
-python3 -I tools/style3-banner.py tools/sponsor-assets frames ML.MINEX.GG
-```
-then encode as for v3.
-
-## ML v5 (style 4: BlossomCraft format)
-
-`minex-ml-v5-*` copies the format of the BlossomCraft banner on Minecraft Buzz. Full bleed, no logo plate; each
-panel is one bright colour (orange, pink, lilac, cyan) with a broad darker swirl turning behind it.
-
-- Panel 1 is the brand line-up, like BlossomCraft's "1.21 | logo | JAVA + BEDROCK CROSSPLAY": the MineX coin, the
-  voxel MineX wordmark, then PREMIUM + CRACKED over the IP.
-- Panels 2-4 are a thin kicker over a huge bold white word (Montserrat), with the panel's 3D Minecraft item
-  mirrored each side, as in the other styles: BUILD, EXPLORE & / SURVIVAL (diamond swords), GRIND FOR REAL /
-  PAYOUTS (gold ingots), COMPETE IN / EVENTS (fireworks).
-- Small themed items (diamonds, emeralds, nether stars, gold and TNT blocks) drift in the outer corners to fill
-  the width, and the headline and items are sized up.
-- Between panels the giant MineX coin sweeps across and reveals the next panel; text zooms in out of a blur and
-  the items pop up from the bottom edge.
-
-| File | Size |
-|---|---|
-| `468x60-hi` | 669 KB |
-| `468x60-mid` | 467 KB |
-| `468x60-lo` | 345 KB |
-| `468x60-tiny` | 248 KB |
-| `1092x140-native` | 2.3 MB |
-
-```bash
-python3 -I tools/blossom-banner.py tools/sponsor-assets frames ML.MINEX.GG
-```
-then encode as for v3.
 
 ## ML Halloween set
 
