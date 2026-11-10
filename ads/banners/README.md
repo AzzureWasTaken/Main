@@ -49,16 +49,15 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 | SURVIVAL | green | diamond sword, mirrored on both sides |
 | PAYOUTS | gold | gold ingot, mirrored on both sides |
 | EVENTS | magenta | firework rocket, mirrored on both sides, falling confetti |
-| ML.MINEX.GG | blue | diamond sword, mirrored on both sides |
+| ML.MINEX.GG | blue | nether star, mirrored on both sides |
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 560 KB |
-| `468x60-mid` | 407 KB |
-| `468x60-lo` | 289 KB |
-| `468x60-tiny` | 206 KB |
-| `1092x140-native` | 1.8 MB |
-| `1092x140.webm` | 328 KB (the format Minecraft Buzz itself serves) |
+| `468x60-hi` | 556 KB |
+| `468x60-mid` | 394 KB |
+| `468x60-lo` | 285 KB |
+| `468x60-tiny` | 203 KB |
+| `1092x140-native` | 1.7 MB |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
