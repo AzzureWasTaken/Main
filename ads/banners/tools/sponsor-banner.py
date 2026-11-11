@@ -28,7 +28,7 @@ PANELS = [
          left=('gold_ingot', 116, -1), right=('gold_ingot', 116, 1)),
     dict(word='EVENTS', kicker=IP, top=(244, 92, 226), bottom=(128, 40, 214), ink=(58, 8, 74), tint=(255, 222, 252),
          left=('firework_rocket', 120, -1), right=('firework_rocket', 120, 1), confetti=True),
-    dict(word=IP, kicker='JOIN NOW', top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255),
+    dict(word='FREE RANKS', kicker=IP, top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255),
          left=('nether_star', 104, -1), right=('nether_star', 104, 1)),
 ]
 CENTER = (318, W - 8)                       # area to the right of the logo block

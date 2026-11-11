@@ -49,7 +49,7 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 | SURVIVAL | green | diamond sword, mirrored on both sides |
 | PAYOUTS | gold | gold ingot, mirrored on both sides |
 | EVENTS | magenta | firework rocket, mirrored on both sides, falling confetti |
-| ML.MINEX.GG | blue | nether star, mirrored on both sides |
+| FREE RANKS | blue | nether star, mirrored on both sides |
 
 | File | Size |
 |---|---|
