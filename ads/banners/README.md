@@ -53,10 +53,10 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 588 KB |
-| `468x60-mid` | 421 KB |
-| `468x60-lo` | 302 KB |
-| `468x60-tiny` | 215 KB |
+| `468x60-hi` | 574 KB |
+| `468x60-mid` | 410 KB |
+| `468x60-lo` | 293 KB |
+| `468x60-tiny` | 203 KB |
 | `1092x140-native` | 1.9 MB |
 
 ```bash

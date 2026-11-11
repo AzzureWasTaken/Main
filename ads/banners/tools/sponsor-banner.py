@@ -176,20 +176,21 @@ def prop_image(name, height, flip, angle, ink):
         _PROP_CACHE[key] = base
     return _PROP_CACHE[key].rotate(angle, resample=Image.BICUBIC, expand=True)
 
+GLINT = np.asarray(Image.open(A / 'enchanted_glint_item.png').convert('RGB'), np.float32) / 255   # the game's own glint texture
 def glint(im, f, phase=0.0):
-    """Minecraft's enchantment glint: purple diagonal bands sliding across the item, inside its outline."""
-    a = im.getchannel('A').filter(ImageFilter.MinFilter(7))
+    """Minecraft's enchantment glint, applied the way the game does: the glint texture tiled, rotated 10 degrees,
+    scrolling, and added as light (additive blend) inside the item's outline. Scroll wraps once per loop."""
     w, h = im.size
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    period = 46.0
-    u = (xx + yy * 0.8 - (2 * period * f / N * 4 + phase * period)) % period    # 4 full sweeps per loop, wraps
-    band = np.clip(1 - np.abs(u - period / 2) / (period * 0.22), 0, 1) ** 1.5
-    u2 = (xx * 0.6 - yy + (period * f / N * 6)) % (period * 1.3)                 # a second, fainter crossing band
-    band = np.maximum(band, 0.5 * np.clip(1 - np.abs(u2 - period * 0.65) / (period * 0.16), 0, 1))
-    m = (band * np.asarray(a, np.float32) / 255 * 215).astype(np.uint8)
-    layer = Image.new('RGBA', im.size, (178, 98, 255, 0)); layer.putalpha(Image.fromarray(m))
-    out = im.copy(); out.alpha_composite(layer)
-    return out
+    T = 110.0                                                  # one texture tile, in pixels
+    c, s_ = math.cos(math.radians(10)), math.sin(math.radians(10))
+    u = (xx * c - yy * s_) / T + 2 * f / N + phase
+    v = (xx * s_ + yy * c) / T - 1 * f / N + phase * 0.5
+    g = GLINT[((v % 1) * 128).astype(int) % 128, ((u % 1) * 128).astype(int) % 128]
+    mask = np.asarray(im.getchannel('A').filter(ImageFilter.MinFilter(7)), np.float32)[..., None] / 255
+    rgba = np.asarray(im).astype(np.float32)
+    rgba[..., :3] = np.clip(rgba[..., :3] + g * 255 * 0.5 * mask, 0, 255)
+    return Image.fromarray(rgba.astype(np.uint8), 'RGBA')
 
 def panel(i, t, f):
     """Render panel i, t frames after it started (t large = settled)."""

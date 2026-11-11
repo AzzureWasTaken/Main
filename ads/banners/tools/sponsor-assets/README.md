@@ -12,3 +12,4 @@ Used by `../sponsor-banner.py` to draw `minex-ml-v3-*`.
 
 The fonts come from the Fontsource npm packages (`@fontsource/bungee`),
 converted from WOFF to TTF with fontTools.
+| `enchanted_glint_item.png` | Minecraft's enchantment glint texture (Mojang), used for the glint on PAYOUTS and FREE RANKS. |
