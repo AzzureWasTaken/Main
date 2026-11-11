@@ -31,7 +31,7 @@ PANELS = [
     dict(word='FREE RANKS', kicker=IP, top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255),
          left=('nether_star', 104, -1), right=('nether_star', 104, 1), glint=True),
 ]
-CENTER = (360, W - 8)                       # area to the right of the logo block
+CENTER = (384, W - 8)                       # area to the right of the logo block
 
 def ease_out(t): t = min(max(t, 0), 1); return 1 - (1 - t) ** 3
 def ease_back(t):
@@ -100,13 +100,13 @@ COIN = outlined('minex_coin', 98)
 
 HEAD = []
 for p in PANELS:
-    max_w = 500 if p['word'] != IP else 540
+    max_w = 480 if p['word'] != IP else 520
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
 KICK = [text_layer(p['kicker'], BUNGEE, 26, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
 WORDMARK = outlined('minex_wordmark', 204, by='width')
 
 def badge():
-    t = text_layer('PREMIUM + CRACKED', BUNGEE, 18, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)
+    t = text_layer('PREMIUM + CRACKED', BUNGEE, 21, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)
     w, h = t.width + 16, t.height + 4
     im = Image.new('RGBA', (w + 6, h + 8), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     d.rounded_rectangle([0, 4, w + 4, h + 6], 7, fill=(40, 20, 4, 255))
@@ -138,7 +138,7 @@ def background(i, f):
     img = img * (1 - 0.30 * edge)
     return np.clip(img, 0, 255)
 
-SPARKS = [(random.Random(s).uniform(372, W - 20), random.Random(s + 99).uniform(10, H - 10), random.Random(s + 7).randrange(N)) for s in range(16)]
+SPARKS = [(random.Random(s).uniform(396, W - 20), random.Random(s + 99).uniform(10, H - 10), random.Random(s + 7).randrange(N)) for s in range(16)]
 def draw_sparkles(img, f):
     d = ImageDraw.Draw(img)
     for x, y, ph in SPARKS:
@@ -149,7 +149,7 @@ def draw_sparkles(img, f):
         d.polygon([(x, y - s), (x + s * .28, y), (x, y + s), (x - s * .28, y)], fill=(255, 255, 255, a))
         d.polygon([(x - s, y), (x, y - s * .28), (x + s, y), (x, y + s * .28)], fill=(255, 255, 255, a))
 
-CONF = [(random.Random(s).uniform(372, W - 10), random.Random(s + 1).uniform(0, H), random.Random(s + 2).choice([(255, 238, 90), (120, 230, 255), (255, 120, 120), (140, 255, 140), (255, 255, 255)]), random.Random(s + 3).uniform(0, 6.28)) for s in range(36)]
+CONF = [(random.Random(s).uniform(396, W - 10), random.Random(s + 1).uniform(0, H), random.Random(s + 2).choice([(255, 238, 90), (120, 230, 255), (255, 120, 120), (140, 255, 140), (255, 255, 255)]), random.Random(s + 3).uniform(0, 6.28)) for s in range(36)]
 def draw_confetti(img, t):
     d = ImageDraw.Draw(img)
     for x, y0, c, ph in CONF:
@@ -226,8 +226,8 @@ def panel(i, t, f):
 def logo_block(img, f):
     # dark plate so the logo reads on every colour
     plate = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(plate)
-    d.polygon([(0, 0), (348, 0), (324, H), (0, H)], fill=(12, 10, 20, 205))
-    d.line([(348, 0), (324, H)], fill=(255, 255, 255, 60), width=3)
+    d.polygon([(0, 0), (372, 0), (348, H), (0, H)], fill=(12, 10, 20, 205))
+    d.line([(372, 0), (348, H)], fill=(255, 255, 255, 60), width=3)
     img.alpha_composite(plate)
     coin = COIN
     p = f % 85
