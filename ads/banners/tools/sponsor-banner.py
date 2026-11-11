@@ -102,7 +102,7 @@ HEAD = []
 for p in PANELS:
     max_w = 520 if p['word'] != IP else 560
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
-KICK = [text_layer(p['kicker'], BUNGEE, 20, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
+KICK = [text_layer(p['kicker'], BUNGEE, 26, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
 WORDMARK = outlined('minex_wordmark', 178, by='width')
 
 def badge():
