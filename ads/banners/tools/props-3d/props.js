@@ -47,9 +47,21 @@ function itemModel(tex, thick = 1) {
   return mesh;
 }
 
+function crop(tex, x, y, w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(tex.image, x, y, w, h, 0, 0, w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 const kind = q.get('kind') || 'block';
 let obj;
-if (kind === 'block') {
+if (kind === 'head') {            // mob head: 8x8x8 cube from an entity texture's head UVs (u=0, v=0)
+  const t = await load(q.get('tex'));
+  const m = (x, y) => new THREE.MeshLambertMaterial({ map: crop(t, x, y, 8, 8) });
+  obj = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), [m(16, 8), m(0, 8), m(8, 0), m(16, 0), m(8, 8), m(24, 8)]);
+  obj.rotation.set(+(q.get('rx') ?? 0.3), +(q.get('ry') ?? 0.6), 0, 'XYZ');
+} else if (kind === 'block') {
   const side = await load(q.get('side'));
   let top = await load(q.get('top') || q.get('side'));
   const bottom = await load(q.get('bottom') || q.get('side'));

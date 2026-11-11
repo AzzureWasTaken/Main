@@ -16,6 +16,7 @@ const PROPS = {
   nether_star: 'kind=item&tex=nether_star&ry=-0.4',
   golden_apple: 'kind=item&tex=golden_apple&ry=-0.5',
   totem_of_undying: 'kind=item&tex=totem_of_undying&ry=-0.5',
+  creeper_head: 'kind=head&tex=creeper&rx=0.3&ry=0.6',
   minex_coin: 'kind=item&tex=minex_coin&ry=-0.35&thick=3.2&half=29.5',
   minex_wordmark: 'kind=item&tex=minex_wordmark&ry=-0.2&rx=0.1&thick=2&half=19',
 };

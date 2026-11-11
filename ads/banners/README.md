@@ -46,18 +46,18 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | Panel | Colour | Props |
 |---|---|---|
-| SURVIVAL | green | diamond sword, mirrored on both sides |
-| PAYOUTS | gold | gold ingot, mirrored on both sides |
+| SURVIVAL | green | creeper head, mirrored on both sides |
+| PAYOUTS | gold | gold ingot with enchantment glint, mirrored on both sides |
 | EVENTS | magenta | firework rocket, mirrored on both sides, falling confetti |
-| FREE RANKS | blue | nether star, mirrored on both sides |
+| FREE RANKS | blue | nether star with enchantment glint, mirrored on both sides |
 
 | File | Size |
 |---|---|
-| `468x60-hi` | 556 KB |
-| `468x60-mid` | 394 KB |
-| `468x60-lo` | 285 KB |
-| `468x60-tiny` | 203 KB |
-| `1092x140-native` | 1.7 MB |
+| `468x60-hi` | 588 KB |
+| `468x60-mid` | 421 KB |
+| `468x60-lo` | 302 KB |
+| `468x60-tiny` | 215 KB |
+| `1092x140-native` | 1.9 MB |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140

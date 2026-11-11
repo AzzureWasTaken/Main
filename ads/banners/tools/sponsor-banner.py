@@ -23,13 +23,13 @@ BUNGEE = str(A / 'fonts' / 'bungee-400.ttf')
 
 PANELS = [
     dict(word='SURVIVAL', kicker=IP, top=(92, 222, 92), bottom=(22, 140, 52), ink=(10, 52, 18), tint=(226, 255, 214),
-         left=('diamond_sword', 118, -1), right=('diamond_sword', 118, 1)),
+         left=('creeper_head', 100, 1), right=('creeper_head', 100, -1)),
     dict(word='PAYOUTS', kicker=IP, top=(255, 200, 40), bottom=(242, 118, 0), ink=(88, 38, 0), tint=(255, 246, 196),
-         left=('gold_ingot', 116, -1), right=('gold_ingot', 116, 1)),
+         left=('gold_ingot', 116, -1), right=('gold_ingot', 116, 1), glint=True),
     dict(word='EVENTS', kicker=IP, top=(244, 92, 226), bottom=(128, 40, 214), ink=(58, 8, 74), tint=(255, 222, 252),
          left=('firework_rocket', 120, -1), right=('firework_rocket', 120, 1), confetti=True),
     dict(word='FREE RANKS', kicker=IP, top=(64, 196, 255), bottom=(28, 84, 222), ink=(8, 34, 92), tint=(216, 242, 255),
-         left=('nether_star', 104, -1), right=('nether_star', 104, 1)),
+         left=('nether_star', 104, -1), right=('nether_star', 104, 1), glint=True),
 ]
 CENTER = (360, W - 8)                       # area to the right of the logo block
 
@@ -176,6 +176,21 @@ def prop_image(name, height, flip, angle, ink):
         _PROP_CACHE[key] = base
     return _PROP_CACHE[key].rotate(angle, resample=Image.BICUBIC, expand=True)
 
+def glint(im, f, phase=0.0):
+    """Minecraft's enchantment glint: purple diagonal bands sliding across the item, inside its outline."""
+    a = im.getchannel('A').filter(ImageFilter.MinFilter(7))
+    w, h = im.size
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    period = 46.0
+    u = (xx + yy * 0.8 - (2 * period * f / N * 4 + phase * period)) % period    # 4 full sweeps per loop, wraps
+    band = np.clip(1 - np.abs(u - period / 2) / (period * 0.22), 0, 1) ** 1.5
+    u2 = (xx * 0.6 - yy + (period * f / N * 6)) % (period * 1.3)                 # a second, fainter crossing band
+    band = np.maximum(band, 0.5 * np.clip(1 - np.abs(u2 - period * 0.65) / (period * 0.16), 0, 1))
+    m = (band * np.asarray(a, np.float32) / 255 * 215).astype(np.uint8)
+    layer = Image.new('RGBA', im.size, (178, 98, 255, 0)); layer.putalpha(Image.fromarray(m))
+    out = im.copy(); out.alpha_composite(layer)
+    return out
+
 def panel(i, t, f):
     """Render panel i, t frames after it started (t large = settled)."""
     p = PANELS[i]
@@ -190,6 +205,7 @@ def panel(i, t, f):
         bob = 5 * math.sin(2 * math.pi * f / 42.5 + (0 if side == 'left' else 2.1))
         ang = 5 * math.sin(2 * math.pi * f / 85 + (1.2 if side == 'left' else 0))
         im = prop_image(name, hgt, flip, ang, p['ink'])
+        if p.get('glint'): im = glint(im, f, 0.0 if side == 'left' else 0.5)
         hw = HEAD[i].width // 2
         px = cx + sgn * (hw + 18 + im.width // 2) + sgn * slide - im.width // 2
         px = int(min(max(px, CENTER[0] - 6), W - im.width + 6)) if t > 9 else int(px)
