@@ -103,7 +103,6 @@ for p in PANELS:
     max_w = 480 if p['word'] != IP else 520
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
 KICK = [text_layer(p['kicker'], BUNGEE, 26, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
-WORDMARK = outlined('minex_wordmark', 204, by='width')
 
 def badge():
     t = text_layer('PREMIUM + CRACKED', BUNGEE, 21, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)
@@ -115,6 +114,16 @@ def badge():
     im.alpha_composite(t, (10, (h - t.height) // 2 + 3))
     return im
 BADGE = badge()
+def _vis(im):                                   # visible (non-shadow) width of a layer
+    a = np.asarray(im.getchannel('A')) > 200
+    cols = np.where(a.any(axis=0))[0]
+    return cols.min(), cols.max() + 1
+# the wordmark is sized so its outline spans exactly the badge box, end to end
+_bl, _br = _vis(BADGE)
+WORDMARK = outlined('minex_wordmark', 204, by='width')
+_wl, _wr = _vis(WORDMARK)
+WORDMARK = outlined('minex_wordmark', round(204 * (_br - _bl) / (_wr - _wl)), by='width')
+_wl, _wr = _vis(WORDMARK)
 
 # ------------------------------------------------------------------ backgrounds
 YY = np.linspace(0, 1, H)[:, None, None]
@@ -238,8 +247,10 @@ def logo_block(img, f):
         sh = Image.composite(sh, Image.new('L', coin.size, 0), coin.getchannel('A'))
         coin = coin.copy(); coin.alpha_composite(Image.merge('RGBA', (Image.new('L', coin.size, 255),) * 3 + (sh,)))
     img.alpha_composite(coin, (8, (H - coin.height) // 2))
-    img.alpha_composite(WORDMARK, (112, 4))
-    img.alpha_composite(BADGE, (max(112, 112 + (WORDMARK.width - BADGE.width) // 2), 4 + WORDMARK.height + 1))
+    bx = 112                                     # badge and wordmark share left and right edges
+    by = H - BADGE.height - 4
+    img.alpha_composite(BADGE, (bx, by))
+    img.alpha_composite(WORDMARK, (bx + _bl - _wl, max(0, by - WORDMARK.height + 4)))
 
 def render(f):
     cur = max(i for i, s in enumerate(STARTS) if s <= f)
