@@ -83,9 +83,12 @@ for dy in (-1, 0, 1):
         ring |= np.roll(np.roll(pad, dy, 0), dx, 1)
 tex = np.zeros((h + 2, w + 2, 4), np.uint8)
 tex[ring & ~pad] = (*G[6], 255)
-rows = [G[0], G[1], G[1], G[2], G[3], G[4], G[5], G[5]]
+rows = [G[0], G[1], G[1], G[2], G[3], G[4], G[5], G[5]]                    # gold, for the X
+white_rows = [(255, 255, 255), (255, 255, 255), (246, 248, 255), (232, 238, 252),
+              (214, 224, 246), (196, 208, 236), (180, 192, 224), (180, 192, 224)]   # white shading to cool grey, for "Mine"
+x_start = sum(p.shape[1] for p in parts[:-2])                                        # first column of the final X
 for y in range(h):
     for x in range(w):
-        if bm[y, x]: tex[y + 1, x + 1] = (*rows[y], 255)
+        if bm[y, x]: tex[y + 1, x + 1] = (*(rows[y] if x >= x_start else white_rows[y]), 255)
 Image.fromarray(tex, 'RGBA').save(D / 'minex_wordmark.png')
 print('coin 16x16, wordmark', tex.shape[1], 'x', tex.shape[0])
