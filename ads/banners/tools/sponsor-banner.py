@@ -102,7 +102,7 @@ HEAD = []
 for p in PANELS:
     max_w = 462 if p['word'] != IP else 500
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
-KICK = [text_layer(p['kicker'], BUNGEE, 26, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
+KICK = [text_layer(p['kicker'], BUNGEE, 32, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
 
 def badge():
     t = text_layer('PREMIUM + CRACKED', BUNGEE, 21, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)
@@ -201,6 +201,19 @@ def glint(im, f, phase=0.0):
     rgba[..., :3] = np.clip(rgba[..., :3] + g * 255 * 0.5 * mask, 0, 255)
     return Image.fromarray(rgba.astype(np.uint8), 'RGBA')
 
+def ease_back_soft(t):
+    t = min(max(t, 0), 1); c = 0.9
+    return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2
+
+def paste_sub(img, im, x, y):
+    """Composite im with its top-left at a fractional (x, y), so slow movement glides instead of stepping."""
+    ix, iy = math.floor(x), math.floor(y); fx, fy = x - ix, y - iy
+    if fx > 1e-3 or fy > 1e-3:
+        im = im.transform((im.width + 2, im.height + 2), Image.AFFINE, (1, 0, -(1 + fx), 0, 1, -(1 + fy)), Image.BICUBIC)
+        ix -= 1; iy -= 1
+    if ix >= W or iy >= H or ix + im.width <= 0 or iy + im.height <= 0: return
+    img.alpha_composite(im, (max(ix, 0), max(iy, 0)), (max(-ix, 0), max(-iy, 0)))
+
 def panel(i, t, f):
     """Render panel i, t frames after it started (t large = settled)."""
     p = PANELS[i]
@@ -208,27 +221,36 @@ def panel(i, t, f):
     draw_sparkles(img, f)
     if p.get('confetti'): draw_confetti(img, f)
     cx = (CENTER[0] + CENTER[1]) // 2
-    # props: slide in from outside, then bob and sway
-    slide = (1 - ease_out(t / 9)) * 170
+    # props: glide in over ~20 frames (eased, fading and scaling up, sub-pixel moves), then bob and sway
+    u = min(1.0, max(0.0, (t - 2) / 20.0))
+    pos = 1 - (1 - u) ** 4                                  # ease-out: fast start, long gentle settle
+    pop = 0.6 + 0.4 * ease_back_soft(u)                     # scale 0.6 -> 1 with a tiny overshoot
+    settle = min(1.0, max(0.0, (t - 12) / 14.0))            # bob and sway fade in so nothing jumps when the glide ends
     for side, sgn in (('left', -1), ('right', 1)):
         name, hgt, flip = p[side]
-        bob = 5 * math.sin(2 * math.pi * f / 42.5 + (0 if side == 'left' else 2.1))
-        ang = 5 * math.sin(2 * math.pi * f / 85 + (1.2 if side == 'left' else 0))
+        bob = settle * 5 * math.sin(2 * math.pi * f / 42.5 + (0 if side == 'left' else 2.1))
+        sway = settle * 5 * math.sin(2 * math.pi * f / 85 + (1.2 if side == 'left' else 0))
+        ang = sway - sgn * 30 * (1 - pos)                   # a slight turn that unwinds as it arrives
         im = prop_image(name, hgt, flip, ang, p['ink'])
         if p.get('glint'): im = glint(im, f, 0.0 if side == 'left' else 0.5)
+        base = prop_image(name, hgt, flip, 0, p['ink'])
         hw = HEAD[i].width // 2
-        px = cx + sgn * (hw + 18 + im.width // 2) + sgn * slide - im.width // 2
-        px = int(min(max(px, CENTER[0] - 6), W - im.width + 6)) if t > 9 else int(px)
-        py = int((H - im.height) / 2 + bob)
-        img.alpha_composite(im, (px, py)) if 0 <= px <= W else None
+        fx = min(max(cx + sgn * (hw + 18 + base.width // 2) - base.width // 2, CENTER[0] - 6), W - base.width + 6)
+        mx = fx + base.width / 2 + sgn * (1 - pos) * 130    # centre x, gliding in from outside
+        my = H / 2 + bob
+        if pop < 0.999:
+            im = im.resize((max(1, round(im.width * pop)), max(1, round(im.height * pop))), Image.LANCZOS)
+        if u < 0.4:
+            im = im.copy(); im.putalpha(im.getchannel('A').point(lambda v, k=u / 0.4: int(v * k)))
+        paste_sub(img, im, mx - im.width / 2, my - im.height / 2)
     # kicker
     k = KICK[i]
-    ky = 4 - (1 - ease_out((t - 2) / 7)) * 40 if t >= 2 else -60
+    ky = 1 - (1 - ease_out((t - 2) / 7)) * 40 if t >= 2 else -60
     img.alpha_composite(k, (cx - k.width // 2, int(ky))) if ky > -k.height else None
     # headline drops in from above with a bounce (same move as style 3)
     hd = HEAD[i]
     drop = (1 - ease_back(t / 11)) * -120 if t < 11 else 0
-    hy = int(74 - hd.height // 2 + 6 + drop)
+    hy = int(79 - hd.height // 2 + 6 + drop)
     img.alpha_composite(hd, (cx - hd.width // 2, hy))
     return img
 
