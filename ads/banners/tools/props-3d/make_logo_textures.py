@@ -84,8 +84,7 @@ for dy in (-1, 0, 1):
 tex = np.zeros((h + 2, w + 2, 4), np.uint8)
 tex[ring & ~pad] = (*G[6], 255)
 rows = [G[0], G[1], G[1], G[2], G[3], G[4], G[5], G[5]]                    # gold, for the X
-white_rows = [(255, 255, 255), (255, 255, 255), (246, 248, 255), (232, 238, 252),
-              (214, 224, 246), (196, 208, 236), (180, 192, 224), (180, 192, 224)]   # white shading to cool grey, for "Mine"
+white_rows = [(255, 255, 255)] * 8                                              # same white as the headline text, for "Mine"
 x_start = sum(p.shape[1] for p in parts[:-2])                                        # first column of the final X
 for y in range(h):
     for x in range(w):
