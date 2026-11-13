@@ -75,8 +75,8 @@ CUSTOM = {                                           # hand-drawn M and X: the g
  'M': ["XX....XX", "XXX..XXX", "XXXXXXXX", "XX.XX.XX", "XX....XX", "XX....XX", "XX....XX", "........"],
  'X': ["XX....XX", "XXX..XXX", ".XX..XX.", ".XXXXXX.", "..XXXX..", ".XXXXXX.", ".XX..XX.", "XXX..XXX", "XX....XX"],
 }
-# The X is the hero letter: 9 rows tall, one above the cap line and one below the baseline; the rest sit on rows 1-7.
-def rows9(g): return g if g.shape[0] == 9 else np.vstack([np.zeros((1, g.shape[1]), bool), g])
+# The X is the hero letter: 9 rows tall, sharing the baseline with "Mine" and rising two rows above its cap line.
+def rows9(g): return g if g.shape[0] == 9 else np.vstack([np.zeros((2, g.shape[1]), bool), g[:7]])
 parts = []
 for ch in 'MineX':
     g = np.array([[c == 'X' for c in r] for r in CUSTOM[ch]]) if ch in CUSTOM else bold(glyph(ch))
