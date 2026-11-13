@@ -20,6 +20,7 @@ W, H, N = 1092, 140, 170
 STARTS = [0, 43, 85, 128]
 WIPE = 7
 BUNGEE = str(A / 'fonts' / 'bungee-400.ttf')
+BUNGEE_IP = str(A / 'fonts' / 'bungee-plain-l-400.ttf')   # Bungee with a plain square L (stem and foot taken from its E), for the IP
 
 PANELS = [
     dict(word='SURVIVAL', kicker=IP, top=(92, 222, 92), bottom=(22, 140, 52), ink=(10, 52, 18), tint=(226, 255, 214),
@@ -102,7 +103,7 @@ HEAD = []
 for p in PANELS:
     max_w = 462 if p['word'] != IP else 500
     HEAD.append(fit_layer(p['word'], BUNGEE, 82, max_w, top=(255, 255, 255), bottom=p['tint'], ink=p['ink'], stroke=6, shadow_dy=6))
-KICK = [text_layer(p['kicker'], BUNGEE, 32, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
+KICK = [text_layer(p['kicker'], BUNGEE_IP, 32, top=(255, 238, 120), bottom=(255, 196, 40), ink=(30, 18, 4), stroke=4, shadow_dy=3) for p in PANELS]
 
 def badge():
     t = text_layer('PREMIUM + CRACKED', BUNGEE, 21, top=(70, 36, 0), bottom=(70, 36, 0), ink=(255, 214, 90), stroke=0, shadow_dy=0)

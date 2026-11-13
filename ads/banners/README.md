@@ -53,10 +53,10 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | File | `minex-ml-v3-` | `minex-mcc-v3-` | `minex-list-v3-` |
 |---|---|---|---|
-| `468x60-hi` | 529 KB | 527 KB | 525 KB |
+| `468x60-hi` | 529 KB | 527 KB | 526 KB |
 | `468x60-mid` | 374 KB | 374 KB | 374 KB |
 | `468x60-lo` | 270 KB | 268 KB | 267 KB |
-| `468x60-tiny` | 187 KB | 188 KB | 187 KB |
+| `468x60-tiny` | 187 KB | 188 KB | 186 KB |
 | `1092x140-native` | 1.7 MB | 1.8 MB | 1.8 MB |
 
 ```bash
