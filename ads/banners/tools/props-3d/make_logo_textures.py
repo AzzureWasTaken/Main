@@ -73,12 +73,14 @@ def bold(g):                                         # the game's bold style: th
     return out
 CUSTOM = {                                           # hand-drawn M and X: the game font's are unreadable at banner size
  'M': ["XX....XX", "XXX..XXX", "XXXXXXXX", "XX.XX.XX", "XX....XX", "XX....XX", "XX....XX", "........"],
- 'X': ["XX....XX", "XXX..XXX", ".XXXXXX.", "..XXXX..", ".XXXXXX.", "XXX..XXX", "XX....XX", "........"],
+ 'X': ["XX....XX", "XXX..XXX", ".XX..XX.", ".XXXXXX.", "..XXXX..", ".XXXXXX.", ".XX..XX.", "XXX..XXX", "XX....XX"],
 }
+# The X is the hero letter: 9 rows tall, one above the cap line and one below the baseline; the rest sit on rows 1-7.
+def rows9(g): return g if g.shape[0] == 9 else np.vstack([np.zeros((1, g.shape[1]), bool), g])
 parts = []
 for ch in 'MineX':
     g = np.array([[c == 'X' for c in r] for r in CUSTOM[ch]]) if ch in CUSTOM else bold(glyph(ch))
-    parts += [g, np.zeros((8, 1), bool)]
+    parts += [rows9(g), np.zeros((9, 1), bool)]
 bm = np.concatenate(parts[:-1], axis=1)
 h, w = bm.shape
 pad = np.zeros((h + 2, w + 2), bool); pad[1:-1, 1:-1] = bm
@@ -88,8 +90,8 @@ for dy in (-1, 0, 1):
         ring |= np.roll(np.roll(pad, dy, 0), dx, 1)
 tex = np.zeros((h + 2, w + 2, 4), np.uint8)
 tex[ring & ~pad] = (*G[6], 255)
-rows = [G[1], G[1], G[2], G[2], G[2], G[3], G[3], G[3]]                    # gold, for the X
-white_rows = [(255, 255, 255)] * 8                                              # same white as the headline text, for "Mine"
+rows = [G[1], G[1], G[1], G[2], G[2], G[2], G[3], G[3], G[3]]                    # gold, for the X
+white_rows = [(255, 255, 255)] * 9                                              # same white as the headline text, for "Mine"
 x_start = sum(p.shape[1] for p in parts[:-2])                                        # first column of the final X
 for y in range(h):
     for x in range(w):
