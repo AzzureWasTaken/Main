@@ -28,3 +28,5 @@ GIF ladder, add it as a separate section on the graphics board page, update the 
 - Small visual tweaks, one at a time. Do exactly what is asked and nothing more.
 - If the owner says "stop", stop immediately and run no more tools.
 - Do not start a local server unless asked.
+- Planet Minecraft rejects the regular GIFs ("File size invalid"): its cap is about 250-350 KB at 468x60. Use the
+  `-468x60-pmc250.gif` (221 KB) or `-pmc350.gif` (340 KB) files; make them for any new IP the same way (see README).

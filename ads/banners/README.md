@@ -132,3 +132,8 @@ These are server-list banners, not the Reddit creative. The
 "PREMIUM + CRACKED" text is a normal thing to state on a server list; the
 concern raised in `../creative-notes.md` is specific to paid Reddit ads,
 where it risks failing ad review.
+
+## Planet Minecraft
+
+Planet Minecraft takes 468x60 banners with a small size cap (sources say 250-350 KB). Use `minex-pmc-v3-468x60-pmc250.gif`
+(221 KB, 10 fps, 64 colours) or `minex-pmc-v3-468x60-pmc350.gif` (340 KB, 12 fps, 128 colours); the regular `mid` GIF (376 KB) is too big.
