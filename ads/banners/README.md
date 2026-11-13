@@ -51,13 +51,13 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 | EVENTS | magenta | firework rocket, mirrored on both sides, falling confetti |
 | FREE RANKS | blue | nether star with enchantment glint, mirrored on both sides |
 
-| File | `minex-ml-v3-` | `minex-mcc-v3-` | `minex-list-v3-` |
-|---|---|---|---|
-| `468x60-hi` | 529 KB | 527 KB | 526 KB |
-| `468x60-mid` | 374 KB | 374 KB | 374 KB |
-| `468x60-lo` | 270 KB | 268 KB | 267 KB |
-| `468x60-tiny` | 187 KB | 188 KB | 186 KB |
-| `1092x140-native` | 1.7 MB | 1.8 MB | 1.8 MB |
+| File | `minex-ml-v3-` | `minex-mcc-v3-` | `minex-list-v3-` | `minex-pmc-v3-` |
+|---|---|---|---|---|
+| `468x60-hi` | 529 KB | 527 KB | 526 KB | 525 KB |
+| `468x60-mid` | 374 KB | 374 KB | 374 KB | 376 KB |
+| `468x60-lo` | 270 KB | 268 KB | 267 KB | 270 KB |
+| `468x60-tiny` | 187 KB | 188 KB | 186 KB | 188 KB |
+| `1092x140-native` | 1.7 MB | 1.8 MB | 1.8 MB | 1.8 MB |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
@@ -66,7 +66,7 @@ ffmpeg -framerate 25 -i frames/f%03d.png -c:v ffv1 minex-ml-v3-lossless.mkv
 W=1092 H=140 ./webm-to-gif.sh minex-ml-v3-lossless.mkv                       # full size
 ```
 
-The third argument is the IP. `minex-mcc-v3-*` and `minex-list-v3-*` are the same banner with `MCC.MINEX.GG` and `LIST.MINEX.GG`. Panels, colours and props are the `PANELS` list at the top of
+The third argument is the IP. `minex-mcc-v3-*`, `minex-list-v3-*` and `minex-pmc-v3-*` are the same banner with `MCC.MINEX.GG`, `LIST.MINEX.GG` and `PMC.MINEX.GG`. Panels, colours and props are the `PANELS` list at the top of
 `tools/sponsor-banner.py`; new props come from `tools/props-3d/`.
 
 ## ML Halloween set
