@@ -33,3 +33,9 @@ GIF ladder, add it as a separate section on the graphics board page, update the 
 - Do not start a local server unless asked.
 - Planet Minecraft rejects the regular GIFs ("File size invalid"): its cap is about 250-350 KB at 468x60. Use the
   `-468x60-pmc250.gif` (221 KB) or `-pmc350.gif` (340 KB) files; make them for any new IP the same way (see README).
+- TopG (topg.org) black banner, diagnosed 2026-11-14: TopG converts an animated upload to a WebM and serves it from
+  `/uploads/banners/<id>-<hash>.webm`. That URL returns nginx **403** (a nonexistent file in the same folder returns 404, other
+  users' static `.webp` files there return 200). So the video exists but TopG's server will not serve it; the black bar is
+  TopG-side, not the GIF (optimised and full-frame GIFs both go black). Every other free upload there is a static WebP.
+  Do not claim a fix without the owner's upload test. Next steps: test the plain animated GIF and still PNG
+  (`topg-test-plain-animated.gif`, `minex-hub-topg-still-468x60.png`), then contact TopG support with the evidence.
