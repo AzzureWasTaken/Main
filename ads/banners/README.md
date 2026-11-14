@@ -53,11 +53,11 @@ extruded gold voxel letters in the game font, drawn the same way as the props
 
 | File | `minex-ml-v3-` | `minex-mcc-v3-` | `minex-list-v3-` | `minex-pmc-v3-` | `minex-hub-v3-` |
 |---|---|---|---|---|---|
-| `468x60-hi` | 529 KB | 527 KB | 526 KB | 525 KB | 529 KB |
-| `468x60-mid` | 374 KB | 374 KB | 374 KB | 376 KB | 374 KB |
-| `468x60-lo` | 270 KB | 268 KB | 267 KB | 270 KB | 269 KB |
-| `468x60-tiny` | 187 KB | 188 KB | 186 KB | 188 KB | 188 KB |
-| `1092x140-native` | 1.7 MB | 1.8 MB | 1.8 MB | 1.8 MB | 1.8 MB |
+| `468x60-hi` | 477 KB | 479 KB | 479 KB | 478 KB | 479 KB |
+| `468x60-mid` | 338 KB | 336 KB | 335 KB | 339 KB | 340 KB |
+| `468x60-lo` | 239 KB | 238 KB | 238 KB | 238 KB | 238 KB |
+| `468x60-tiny` | 166 KB | 166 KB | 166 KB | 166 KB | 166 KB |
+| `1092x140-native` | 1.6 MB | 1.6 MB | 1.6 MB | 1.6 MB | 1.6 MB |
 
 ```bash
 python3 -I tools/sponsor-banner.py tools/sponsor-assets frames ML.MINEX.GG    # 170 frames, 1092x140
@@ -137,3 +137,9 @@ where it risks failing ad review.
 
 Planet Minecraft takes 468x60 banners with a small size cap (sources say 250-350 KB). Use `minex-pmc-v3-468x60-pmc250.gif`
 (221 KB, 10 fps, 64 colours) or `minex-pmc-v3-468x60-pmc350.gif` (340 KB, 12 fps, 128 colours); the regular `mid` GIF (376 KB) is too big.
+
+## Speed
+
+All banners play about 15% faster than the original 170-frame render: the generator output is resampled to 148 frames
+(frame `round(k*170/148)` for k = 0..147), so the loop is 5.9 s and stays seamless. The `pmc250` and `pmc350` files
+are re-encoded from the same sped-up source.

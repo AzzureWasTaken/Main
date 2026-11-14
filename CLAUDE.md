@@ -23,7 +23,9 @@ GIF ladder, add it as a separate section on the graphics board page, update the 
 - Each panel has its own props. SURVIVAL: creeper heads, PAYOUTS: gold ingots, EVENTS: firework rockets,
   FREE RANKS: nether stars. Never reuse the same prop on two panels.
 - IP text on every panel is large. Eased item entry (about 20 frames), not laggy.
-- Recommended upload is the 468x60 `mid` GIF (about 374 KB).
+- Recommended upload is the 468x60 `mid` GIF (about 338 KB).
+- Animation was sped up ~15% on the owner's request: the loop is 148 frames at 25 fps (5.9 s), made by sampling the
+  170 generated frames (`scratchpad` script: render 170, keep frame round(k*170/148)). Keep new IPs at the same speed.
 
 ## How the owner works
 - Small visual tweaks, one at a time. Do exactly what is asked and nothing more.
