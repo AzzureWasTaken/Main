@@ -33,12 +33,8 @@ GIF ladder, add it as a separate section on the graphics board page, update the 
 - Do not start a local server unless asked.
 - Planet Minecraft rejects the regular GIFs ("File size invalid"): its cap is about 250-350 KB at 468x60. Use the
   `-468x60-pmc250.gif` (221 KB) or `-pmc350.gif` (340 KB) files; make them for any new IP the same way (see README).
-- TopG (topg.org) black banner, diagnosed 2026-11-14: TopG converts an animated upload to a WebM and serves it from
-  `/uploads/banners/<id>-<hash>.webm`. That URL returns nginx **403** (a nonexistent file in the same folder returns 404, other
-  users' static `.webp` files there return 200). So the video exists but TopG's server will not serve it; the black bar is
-  TopG-side, not the GIF (optimised and full-frame GIFs both go black). Every other free upload there is a static WebP.
-  Confirmed TopG-wide: three other servers' animated uploads (`/uploads/banners/*.webm`) also return 403 and show black.
-  The still PNG upload worked (served as static `.webp`, 200). TopG only accepts PNG or GIF. Its still output is byte-identical to libwebp
-  quality 85 (PHP GD or ffmpeg). Candidate fix: upload `minex-hub-v3-468x60-topg-animated.png` (animated PNG, 343 KB,
-  same look; ffmpeg keeps it animated, GD would make it a still). Verify after any upload with `node ads/banners/tools/topg-live-check.mjs 688395`
-  (>1 distinct on-screen frames = animating). Do not claim a fix until that check passes.
+- TopG (topg.org): only accepts PNG or GIF, and **cannot show an animated banner right now** (verified 2026-11-14 with
+  `node ads/banners/tools/topg-live-check.mjs 688395`). Animated GIFs become a `/uploads/banners/*.webm` that TopG's nginx
+  serves as 403, so they show black (same for other servers). PNGs become a still WebP via PHP GD (quality 85); an animated
+  PNG came out as its first frame. Use the stills `minex-hub-topg-still-{survival,payouts,events,freeranks}.png`
+  (owner chose "pick one screen"). Only TopG fixing its video serving would allow the animated banner.
