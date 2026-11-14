@@ -9,6 +9,7 @@ The owner uploads the GIFs to Minecraft server-list sites as paid sponsored bann
 - `minex-mcc-v3-*`  -> `MCC.MINEX.GG`
 - `minex-list-v3-*` -> `LIST.MINEX.GG`
 - `minex-pmc-v3-*`  -> `PMC.MINEX.GG`
+- `minex-hub-v3-*`  -> `HUB.MINEX.GG`
 A new IP request means "change the IP only": run the generator with the new IP as the third argument, encode the
 GIF ladder, add it as a separate section on the graphics board page, update the README size table, commit and push.
 
