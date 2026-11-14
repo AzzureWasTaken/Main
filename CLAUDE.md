@@ -38,6 +38,7 @@ GIF ladder, add it as a separate section on the graphics board page, update the 
   users' static `.webp` files there return 200). So the video exists but TopG's server will not serve it; the black bar is
   TopG-side, not the GIF (optimised and full-frame GIFs both go black). Every other free upload there is a static WebP.
   Confirmed TopG-wide: three other servers' animated uploads (`/uploads/banners/*.webm`) also return 403 and show black.
-  The still PNG upload worked (served as static `.webp`, 200). Candidate fix: upload `minex-hub-v3-468x60-topg.webp`
-  (animated WebP, 311 KB, same look). Verify after any upload with `node ads/banners/tools/topg-live-check.mjs 688395`
+  The still PNG upload worked (served as static `.webp`, 200). TopG only accepts PNG or GIF. Its still output is byte-identical to libwebp
+  quality 85 (PHP GD or ffmpeg). Candidate fix: upload `minex-hub-v3-468x60-topg-animated.png` (animated PNG, 343 KB,
+  same look; ffmpeg keeps it animated, GD would make it a still). Verify after any upload with `node ads/banners/tools/topg-live-check.mjs 688395`
   (>1 distinct on-screen frames = animating). Do not claim a fix until that check passes.
